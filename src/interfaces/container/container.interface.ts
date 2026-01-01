@@ -1,10 +1,30 @@
+import { ServiceMap } from '@ServiceMap';
+
 /**
- * Represents a mapping of service identifiers to their corresponding implementations.
- *
- * @remarks
- * This interface is currently empty. Consider using the `object` or `unknown` type if you intend to allow any value,
- * or extend this interface with specific service properties as needed.
+ * Represents a type alias for the keys of the `ServiceMap` interface.
+ * Used as an identifier for services within the dependency injection container.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ServiceMap {}
+export type Token = keyof ServiceMap;
+
+/**
+ * Represents the lifecycle of a dependency within a container.
+ * - `'singleton'`: Only one instance is created and shared.
+ * - `'transient'`: A new instance is created each time it is requested.
+ */
+
+export type Lifecycle = 'singleton' | 'transient';
+
+/**
+ * Represents a dependency injection container interface for registering and resolving services.
+ *
+ * @template ServiceMap A mapping of service tokens to their corresponding types.
+ */
+
+export interface IContainer {
+	register<K extends keyof ServiceMap>(token: K, factory: (container: IContainer) => ServiceMap[K]): void;
+	registerSingleton<K extends keyof ServiceMap>(token: K, factory: (container: IContainer) => ServiceMap[K]): void;
+	registerInstance<K extends keyof ServiceMap>(token: K, instance: ServiceMap[K]): void;
+	resolve<K extends keyof ServiceMap>(token: K): ServiceMap[K];
+	isRegistered(token: keyof ServiceMap): boolean;
+}

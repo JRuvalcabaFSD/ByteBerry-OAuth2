@@ -23,7 +23,7 @@
 			"@presentation": ["src/presentation/index.ts"],
 			"@shared": ["src/shared/index.ts"],
 			"@prisma/client": ["./generated/prisma/client.ts"],
-			"@ServiceMap": ["./src/interfaces/container/container.interface.ts"]
+			"@ServiceMap": ["./src/interfaces/container/service-map.interface.ts"]
 		},
 
 		"declaration": true,

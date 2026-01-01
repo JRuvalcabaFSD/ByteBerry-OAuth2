@@ -3,8 +3,10 @@ import pkg from '../../package.json' with { type: 'json' };
 
 import { IConfig, NodeEnv } from '@interfaces';
 import { ConfigError, getErrMessage } from '@shared';
+import { Injectable } from 'src/shared/decorators/injectable.decorator.js';
 
 //TODO documentar
+@Injectable({ name: 'Config' })
 export class Config implements IConfig {
 	//Code environments
 	public readonly nodeEnv: NodeEnv;
