@@ -1,6 +1,6 @@
 {
 	"name": "oauth2",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"description": "Servidor OAuth2 con Authorization Code + PKCE, JWT RS256, refresh tokens y JWKS",
 	"main": "dist/app.js",
 	"type": "module",
