@@ -7,6 +7,7 @@ import './services/uuid.service.js';
 import './services/winston-logger.service.js';
 import './http/http.server.js';
 import './lifecycle/shutdown.js';
+import './repositories/inMemory.repository.js';
 
 // ======================================
 // Export modules
@@ -25,6 +26,9 @@ export * from './http/middlewares/security.middleware.js';
 //Lifecycle
 export * from './lifecycle/shutdown.js';
 export * from './lifecycle/shutdown-config.js';
+
+//Repositories
+export * from './repositories/inMemory.repository.js';
 
 //Services
 export * from './services/clock.service.js';
