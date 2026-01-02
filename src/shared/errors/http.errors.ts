@@ -49,12 +49,12 @@ export class HttpError extends AppError {
 		}
 	}
 
-	public toJSON(): { error: string; message: string; statusCode: number; errorList: ErrorList[] | null } {
+	public toJSON(): { error: string; message: string; statusCode: number; errorList?: ErrorList[] | null } {
 		return {
 			error: this.errorCause,
 			message: this.message,
 			statusCode: this.statusCode,
-			errorList: this.errorList,
+			...(this.errorList && { errorList: this.errorList }),
 		};
 	}
 }
@@ -77,9 +77,9 @@ export class CorsOriginError extends HttpError {
 		let msg: string;
 		if (origin) {
 			msg = `Origin ${origin} not allowed by CORS`;
+		} else {
+			msg = 'Not allowed by CORS';
 		}
-
-		msg = 'Not allowed by CORS';
 
 		super(msg, 'http', 'Invalid Cors', 200);
 		this.origin = origin;
