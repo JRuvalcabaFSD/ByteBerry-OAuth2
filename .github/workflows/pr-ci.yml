@@ -1,0 +1,418 @@
+name: 🔍 PR-CI - ByteBerry oauth2 API
+
+on:
+  pull_request:
+    branches: [develop, main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig*.json"
+      - "jest.config.ts"
+      - "eslint.config.mts"
+      - "Dockerfile"
+      - ".github/workflows/**"
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22.21.1"
+  DATABASE_URL: "postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public"
+
+jobs:
+  setup:
+    name: 📦 Setup & Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 💾 Cache node_modules
+        uses: actions/cache/save@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+  quality:
+    name: 📝 Code Quality
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore node_modules
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: 🔍 Run ESLint
+        run: pnpm lint
+
+      # TODO F2
+      # - name: Generate Prisma Client
+      #   run: pnpm prisma generate
+
+      - name: 📏 Check TypeScript types
+        run: pnpm type-check
+
+      - name: 📊 Generate lint report
+        if: always()
+        run: |
+          echo "📊 ESLint Summary:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          pnpm lint --format=unix 2>&1 | head -20 >> $GITHUB_STEP_SUMMARY || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore node_modules
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # TODO F2
+      # - name: Generate Prisma Client
+      #   run: pnpm prisma generate
+
+      - name: 🏗️ Build TypeScript
+        run: pnpm build
+
+      - name: 📊 Verify build output
+        run: |
+          echo "🔍 Checking build artifacts..."
+          ls -la dist/
+          echo ""
+          echo "📦 Build size:"
+          du -sh dist/
+          echo ""
+          echo "📄 Entry point check:"
+          [ -f "dist/src/app.js" ] && echo "✅ app.js exists" || exit 1
+
+      - name: 📦 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  test:
+    name: 🧪 Tests
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore node_modules
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: dist/
+
+      # TODO F1
+      # - name: Generate JWT test keys
+      #   run: pnpm generate:keys
+
+      # TODO F2
+      # - name: Generate Prisma Client
+      #   run: pnpm prisma generate
+
+      # TODO F2
+      # - name: Set up Docker Compose
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker-compose
+
+      - name: 🧪 Run unit tests with coverage
+        run: |
+          export NODE_ENV=test
+          export CI=true
+          pnpm test:unit
+
+      # F1
+      # - name: 🧪 Run integration tests
+      #   env:
+      #     DATABASE_URL: postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public
+      #     NODE_ENV: test
+      #     CI: true
+      #   run: pnpm test:integration
+
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore node_modules
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: 🔍 Run security audit
+        run: |
+          echo "🔍 Running pnpm audit..."
+          pnpm audit --audit-level moderate --json > audit-results.json || AUDIT_EXIT_CODE=$?
+
+          echo "📊 Security Audit Results:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+
+          if [ -s audit-results.json ]; then
+            echo "Audit completed. Checking results..." >> $GITHUB_STEP_SUMMARY
+
+            VULN_COUNT=$(cat audit-results.json | jq -r '.metadata.vulnerabilities.total // 0' 2>/dev/null || echo "0")
+            echo "Total vulnerabilities found: $VULN_COUNT" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$VULN_COUNT" != "0" ] && [ "$VULN_COUNT" != "null" ]; then
+              echo "⚠️ Vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+              cat audit-results.json | jq '.metadata.vulnerabilities' 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Details not available" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ No audit issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${AUDIT_EXIT_CODE:-0}" -ne 0 ]; then
+            echo "❌ Audit failed with critical vulnerabilities"
+            exit $AUDIT_EXIT_CODE
+          fi
+
+      - name: 📊 Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-${{ github.sha }}
+          path: audit-results.json
+          retention-days: 30
+
+  docker:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    timeout-minutes: 15
+    if: ${{ !github.event.pull_request.draft }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build Docker image
+        run: |
+          echo "🏗️ Building Docker image for PR verification..."
+          docker build -t byteberry-oauth2:pr-${{ github.event.pull_request.number }} .
+
+      # F2
+      # - name: 🗄️ Start PostgreSQL for smoke test
+      #   run: |
+      #     docker run -d --name test-postgres \
+      #       -e POSTGRES_USER=test_user \
+      #       -e POSTGRES_PASSWORD=test_password \
+      #       -e POSTGRES_DB=oauth2_test \
+      #       -p 5433:5432 \
+      #       postgres:16-alpine
+
+      #     echo "⏳ Waiting for PostgreSQL to be ready..."
+      #     for i in {1..30}; do
+      #       if docker exec test-postgres pg_isready -U test_user -d oauth2_test > /dev/null 2>&1; then
+      #         echo "✅ PostgreSQL is ready"
+      #         break
+      #       fi
+      #       echo "Attempt $i/30: PostgreSQL not ready yet..."
+      #       sleep 2
+      #     done
+
+      - name: 🧪 Smoke test Docker image
+        run: |
+          echo "🧪 Starting OAuth2 service..."
+
+          docker run -d --name test-oauth2 \
+            --network host \
+            -e NODE_ENV=development \
+            -e PORT=4000 \
+            -e LOG_LEVEL=info \
+            -e DATABASE_URL=postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public \
+            -e RUN_MIGRATIONS=true \
+            -e JWT_PRIVATE_KEY=dummy \
+            -e JWT_PUBLIC_KEY=dummy \
+            byteberry-oauth2:pr-${{ github.event.pull_request.number }}
+
+          echo "⏳ Waiting for service to start (max 60s)..."
+          for i in {1..30}; do
+            if curl -f http://localhost:4000/health > /dev/null 2>&1; then
+              echo "✅ Service is ready"
+              break
+            fi
+
+            # Check if container died
+            if ! docker ps | grep -q test-oauth2; then
+              echo "❌ Container died during startup"
+              echo "📋 Container logs:"
+              docker logs test-oauth2
+              exit 1
+            fi
+
+            echo "Attempt $i/30: Service not ready yet..."
+            sleep 2
+          done
+
+          # Test health endpoint
+          echo "🔍 Testing /health endpoint..."
+          HEALTH=$(curl -s http://localhost:4000/health)
+          echo "Response: $HEALTH"
+
+          if echo "$HEALTH" | jq -e '.status == "healthy"' > /dev/null; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed"
+            docker logs test-oauth2
+            exit 1
+          fi
+
+          # Test deep health endpoint
+          echo "🔍 Testing /health/deep endpoint..."
+          DEEP_HEALTH=$(curl -s http://localhost:4000/health/deep)
+          echo "Response: $DEEP_HEALTH"
+
+          if echo "$DEEP_HEALTH" | jq -e '.database.connected == true' > /dev/null; then
+            echo "✅ Database connection validated"
+          else
+            echo "⚠️ Database health check shows issues"
+            echo "$DEEP_HEALTH" | jq '.database'
+          fi
+
+          echo "✅ All smoke tests passed"
+
+      - name: 🗑️ Cleanup
+        if: always()
+        run: |
+          docker stop smoke-test-oauth2 smoke-test-db 2>/dev/null || true
+          docker rm smoke-test-oauth2 smoke-test-db 2>/dev/null || true
+          docker rmi byteberry-oauth2:pr-${{ github.event.pull_request.number }} 2>/dev/null || true
+
+  summary:
+    name: 📋 PR Summary
+    runs-on: ubuntu-latest
+    needs: [quality, build, test, security, docker]
+    if: always()
+
+    steps:
+      - name: 📊 Generate PR summary
+        run: |
+          echo "# 🔍 PR-CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Code Quality | ${{ needs.quality.result == 'success' && '✅' || '❌' }} | ${{ needs.quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ${{ needs.build.result == 'success' && '✅' || '❌' }} | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Tests | ${{ needs.test.result == 'success' && '✅' || '❌' }} | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security | ${{ needs.security.result == 'success' && '✅' || '❌' }} | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Docker | ${{ needs.docker.result == 'success' && '✅' || needs.docker.result == 'skipped' && '⏭️' || '❌' }} | ${{ needs.docker.result }} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Ready for merge?" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.quality.result }}" == "success" && "${{ needs.build.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+            echo "🎉 **All critical checks passed!** This PR is ready for review and merge." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some checks failed.** Please fix the issues before merging:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            [[ "${{ needs.quality.result }}" != "success" ]] && echo "- ❌ Code quality issues need to be resolved" >> $GITHUB_STEP_SUMMARY
+            [[ "${{ needs.build.result }}" != "success" ]] && echo "- ❌ Build is failing" >> $GITHUB_STEP_SUMMARY
+            [[ "${{ needs.test.result }}" != "success" ]] && echo "- ❌ Tests are failing" >> $GITHUB_STEP_SUMMARY
+            [[ "${{ needs.security.result }}" != "success" ]] && echo "- ❌ Security vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: ✅ All checks passed
+        if: needs.quality.result == 'success' && needs.build.result == 'success' && needs.test.result == 'success' && needs.security.result == 'success'
+        run: echo "🎉 All critical checks passed! PR ready for merge."
+
+      - name: ❌ Some checks failed
+        if: needs.quality.result == 'failure' || needs.build.result == 'failure' || needs.test.result == 'failure' || needs.security.result == 'failure'
+        run: |
+          echo "❌ Critical checks failed:"
+          echo "  Quality: ${{ needs.quality.result }}"
+          echo "  Build: ${{ needs.build.result }}"
+          echo "  Test: ${{ needs.test.result }}"
+          echo "  Security: ${{ needs.security.result }}"
+          exit 1
