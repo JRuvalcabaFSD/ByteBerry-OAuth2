@@ -16,7 +16,9 @@
 		"npm": ">=10.20.0"
 	},
 	"scripts": {
-		"dev": "pnpm type-check && tsx --watch src/app.ts",
+		"dev": "pnpm run dev:app --parallel & pnpm run dev:css",
+		"dev:css": "tailwindcss -i ./views/input.css -o ./public/css/output.css --postcss --watch",
+		"dev:app": "pnpm type-check && tsx --watch src/app.ts",
 		"start": "node dist/src/app.js",
 		"test:all": "pnpm test:unit && pnpm test:integration",
 		"test:coverage:all": "pnpm test:unit:coverage && pnpm test:integration",

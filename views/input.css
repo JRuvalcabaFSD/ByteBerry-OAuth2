@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Configuración del theme (colores custom de tu config.mjs) */
+@theme {
+	--color-primary: #f59e0b; /* primary.DEFAULT */
+	--color-primary-dark: #d97706; /* primary.dark */
+	--color-primary-light: #fbbf24; /* primary.light (no lo usas ahora, pero lo incluyo) */
+
+	--color-dark-100: #1e293b; /* dark.100 */
+	--color-dark-200: #0f172a; /* dark.200 */
+	--color-dark-300: #020617; /* dark.300 */
+}
+
+/* Clases custom como utilities (para que soporten variantes: hover, focus, disabled, etc.) */
+@utility btn-primary {
+	@apply px-4 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-dark-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+}
+
+@utility input-field {
+	@apply w-full px-4 py-3 bg-dark-200 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200;
+}
+
+@utility card {
+	@apply bg-dark-100 rounded-lg border border-gray-700 shadow-xl;
+}
+
+@utility alert-error {
+	@apply bg-red-900/30 border border-red-700 text-red-400 px-4 py-3 rounded-lg text-sm;
+}
+
+@utility alert-success {
+	@apply bg-green-900/30 border border-green-700 text-green-400 px-4 py-3 rounded-lg text-sm;
+}

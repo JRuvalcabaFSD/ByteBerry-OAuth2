@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 
 import { Injectable } from '@shared';
-import type { HomeResponse, IClock, IConfig, IHealthService } from '@interfaces';
 import { createHealthRoutes } from './health.routes.js';
+import type { HomeResponse, IClock, IConfig, IHealthService } from '@interfaces';
+import { createAuthRoutes, type LoginController } from '@presentation';
 
 /**
  * Extends the global ServiceMap interface to include the IConfig interface.
@@ -18,14 +19,15 @@ declare module '@ServiceMap' {
 }
 
 //TODO documentar
-@Injectable({ name: 'AppRouter', depends: ['Config', 'Clock', 'HealthService'] })
+@Injectable({ name: 'AppRouter', depends: ['Config', 'Clock', 'HealthService', 'LoginController'] })
 export class AppRouter {
 	private readonly router: Router;
 
 	constructor(
 		private readonly config: IConfig,
 		private readonly clock: IClock,
-		private readonly heathService: IHealthService
+		private readonly heathService: IHealthService,
+		private readonly LoginController: LoginController
 	) {
 		this.router = Router();
 		this.setupRoutes();
@@ -52,6 +54,9 @@ export class AppRouter {
 
 	private setupRoutes(): void {
 		const baseurl = `${this.config.serviceUrl}:${this.config.port}`;
+
+		//Auth
+		this.router.use('/auth', createAuthRoutes(this.LoginController));
 
 		//Health
 		this.router.use('/health', createHealthRoutes(this.heathService));
@@ -97,7 +102,7 @@ export class AppRouter {
 			// { name: 'authorize', value: `${baseUrl}/auth/authorize`, method: 'GET' },
 			// { name: 'JWKS', value: `${baseUrl}/auth/.well-known/jwks.json`, method: 'GET' },
 			// { name: 'login', value: `${baseUrl}/auth/login`, method: 'POST' },
-			// { name: 'login', value: `${baseUrl}/auth/login`, method: 'GET' },
+			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'GET' },
 			// { name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
 			// { name: 'user', value: `${baseUrl}/user/register`, method: 'POST' },
 			// { name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },

@@ -1,14 +1,15 @@
 import { Server } from 'http';
-// import path, { join } from 'path';
-// import { fileURLToPath } from 'url';
+import path, { join } from 'path';
+import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import express, { Application } from 'express';
 
 import * as Middlewares from '@infrastructure';
+
 import { AppError } from '@domain';
+import { AppRouter } from '@presentation';
 import { getErrMessage, Injectable, LogContextClass, LogContextMethod } from '@shared';
 import type { IConfig, IClock, ILogger, IHttpServer, ServerInfo, IUuid } from '@interfaces';
-import { AppRouter } from '@presentation';
 
 /**
  * Represents an HTTP server implementation using Express, providing lifecycle management,
@@ -48,8 +49,7 @@ export class HttpServer implements IHttpServer {
 		private readonly appRouter: AppRouter
 	) {
 		this.app = express();
-		// TODO F1
-		// this.setupViewEngine();
+		this.setupViewEngine();
 		this.setupMiddlewares();
 		this.app.use(this.appRouter.getRoutes());
 		this.setupHandledError();
@@ -208,13 +208,27 @@ export class HttpServer implements IHttpServer {
 		this.app.use(Middlewares.createErrorMiddleware(this.logger, this.config));
 	}
 
-	// TODO F1
-	// private setupViewEngine(): void {
-	// 	const __filename = fileURLToPath(import.meta.url);
-	// 	const __dirname = path.dirname(__filename);
+	/**
+	 * Configures the view engine for the Express application.
+	 *
+	 * Sets up EJS as the templating engine and configures the views directory path
+	 * relative to the current file location. Also serves static files from the public directory.
+	 *
+	 * @remarks
+	 * - Sets the views directory to '../../../views' relative to the current file
+	 * - Configures EJS as the view engine
+	 * - Enables serving of static files from '../../../public' directory
+	 *
+	 * @private
+	 * @returns {void}
+	 */
 
-	// 	this.app.set('views', join(__dirname, '../../../views'));
-	// 	this.app.set('view engine', 'ejs');
-	// 	this.app.use(express.static(join(__dirname, '../../../public')));
-	// }
+	private setupViewEngine(): void {
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = path.dirname(__filename);
+
+		this.app.set('views', join(__dirname, '../../../views'));
+		this.app.set('view engine', 'ejs');
+		this.app.use(express.static(join(__dirname, '../../../public')));
+	}
 }
