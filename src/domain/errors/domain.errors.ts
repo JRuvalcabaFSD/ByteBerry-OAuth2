@@ -23,3 +23,29 @@ export class AppError extends Error {
 		Error.captureStackTrace(this, AppError);
 	}
 }
+
+/**
+ * Represents an error that occurs when a value object validation or construction fails.
+ *
+ * This error extends {@link AppError} and is used throughout the domain layer to indicate
+ * issues with value object creation, validation, or manipulation. It automatically captures
+ * the stack trace and sets the error name to 'ValueObjectError'.
+ *
+ * @extends AppError
+ *
+ * @example
+ * ```typescript
+ * if (!isValidEmail(email)) {
+ *   throw new ValueObjectError('Invalid email format');
+ * }
+ * ```
+ */
+
+export class ValueObjectError extends AppError {
+	constructor(msg: string) {
+		super(msg, 'domain');
+		this.name = 'ValueObjectError';
+
+		Error.captureStackTrace(this, ValueObjectError);
+	}
+}

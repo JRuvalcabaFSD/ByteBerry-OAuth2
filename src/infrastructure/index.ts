@@ -9,6 +9,7 @@ import './http/http.server.js';
 import './lifecycle/shutdown.js';
 import './repositories/inMemory-user.repository.js';
 import './repositories/inMemory-session.repository.js';
+import './repositories/inMemory-code.repository.js';
 
 // ======================================
 // Export modules
@@ -31,6 +32,7 @@ export * from './lifecycle/shutdown-config.js';
 //Repositories
 export * from './repositories/inMemory-user.repository.js';
 export * from './repositories/inMemory-session.repository.js';
+export * from './repositories/inMemory-code.repository.js';
 
 //Services
 export * from './services/clock.service.js';

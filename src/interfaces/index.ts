@@ -11,6 +11,7 @@ export * from './http/http.server.interface.js';
 //Repositories
 export * from './repositories/user.repository.interface.js';
 export * from './repositories/session.repository.interface.js';
+export * from './repositories/code.repository.interface.js';
 
 //Services
 export * from './services/clock.service.interface.js';
