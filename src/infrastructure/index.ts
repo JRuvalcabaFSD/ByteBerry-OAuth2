@@ -11,6 +11,9 @@ import './repositories/inMemory-user.repository.js';
 import './repositories/inMemory-session.repository.js';
 import './repositories/inMemory-code.repository.js';
 import './repositories/inMemory-client.repository.js';
+import './services/key-loader.service.js';
+import './services/jwt.service.js';
+import './services/hash.service.js';
 
 // ======================================
 // Export modules
@@ -42,3 +45,6 @@ export * from './services/health-register.service.js';
 export * from './services/health.service.js';
 export * from './services/uuid.service.js';
 export * from './services/winston-logger.service.js';
+export * from './services/key-loader.service.js';
+export * from './services/jwt.service.js';
+export * from './services/hash.service.js';

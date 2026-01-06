@@ -19,8 +19,11 @@ export * from './repositories/client.repository.interface.js';
 
 //Services
 export * from './services/clock.service.interface.js';
-export * from './services/logger.service.interface.js';
+export * from './services/hash.service.interface.js';
 export * from './services/health.service.interface.js';
+export * from './services/jwt.service.interface.js';
+export * from './services/key-loader.service.interface.js';
+export * from './services/logger.service.interface.js';
 export * from './services/uuid.service.interface.js';
 
 //Use cases

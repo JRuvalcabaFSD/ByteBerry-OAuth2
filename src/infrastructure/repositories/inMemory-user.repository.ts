@@ -63,9 +63,11 @@ export class InMemoryUserRepository implements Partial<IUserRepository> {
 
 		return user;
 	}
-	// public async findById(id: string): Promise<UserEntity | undefined> {
-	// 	return MOCK_USERS.find((user) => user.id === id);
-	// }
+	public async findById(id: string): Promise<UserEntity | null> {
+		const user = MOCK_USERS.find((user) => user.id === id);
+		if (!user) return null;
+		return user;
+	}
 	public async validateCredentials(emailOrUsername: string, password: string): Promise<UserEntity | null> {
 		const user = (await this.findByEmail(emailOrUsername)) ?? ((await this.findByUserName(emailOrUsername)) as UserEntity);
 

@@ -8,6 +8,7 @@ import {
 	createHealthRoutes,
 	createSessionMiddleware,
 	RedirectToLoginErrorHandle,
+	TokenController,
 	type LoginController,
 } from '@presentation';
 
@@ -27,7 +28,7 @@ declare module '@ServiceMap' {
 //TODO documentar
 @Injectable({
 	name: 'AppRouter',
-	depends: ['Config', 'Clock', 'SessionRepository', 'Logger', 'HealthService', 'LoginController', 'AuthController'],
+	depends: ['Config', 'Clock', 'SessionRepository', 'Logger', 'HealthService', 'LoginController', 'AuthController', 'tokenController'],
 })
 export class AppRouter {
 	private readonly router: Router;
@@ -38,8 +39,9 @@ export class AppRouter {
 		private readonly sessionRepository: ISessionRepository,
 		private readonly logger: ILogger,
 		private readonly heathService: IHealthService,
-		private readonly LoginController: LoginController,
-		private readonly AuthController: AuthController
+		private readonly loginCtl: LoginController,
+		private readonly authCtl: AuthController,
+		private readonly tokenCtl: TokenController
 	) {
 		this.router = Router();
 		this.setupRoutes();
@@ -74,7 +76,7 @@ export class AppRouter {
 		});
 
 		//Auth
-		this.router.use('/auth', createAuthRoutes(this.LoginController, this.AuthController, requireSessionRedirect));
+		this.router.use('/auth', createAuthRoutes(this.loginCtl, this.authCtl, this.tokenCtl, requireSessionRedirect));
 
 		//Health
 		this.router.use('/health', createHealthRoutes(this.heathService));
@@ -121,7 +123,7 @@ export class AppRouter {
 			// { name: 'JWKS', value: `${baseUrl}/auth/.well-known/jwks.json`, method: 'GET' },
 			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'POST' },
 			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'GET' },
-			// { name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
+			{ name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
 			// { name: 'user', value: `${baseUrl}/user/register`, method: 'POST' },
 			// { name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
 			// { name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },

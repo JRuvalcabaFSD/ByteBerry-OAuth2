@@ -7,7 +7,7 @@ export class InMemoryAuthCodeRepository implements ICodeRepository {
 	private readonly store = new Map<string, CodeEntity>();
 
 	public async save(code: CodeEntity): Promise<void> {
-		code.markAsUsed();
+		// code.markAsUsed();
 		this.store.set(code.code, code);
 	}
 	public async findByCode(code: string): Promise<CodeEntity | null> {

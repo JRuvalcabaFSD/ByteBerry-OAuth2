@@ -1,4 +1,4 @@
-import z, { boolean, object, regexes, string, url, ZodType } from 'zod';
+import z, { boolean, literal, object, regexes, string, url, ZodType } from 'zod';
 import { ipString, maxMinString, requiredString } from './helpers.js';
 
 /**
@@ -42,6 +42,24 @@ export interface CodeRequestData {
 	codeChallengeMethod: 'S256' | 'plain';
 	state?: string;
 	scope?: string;
+}
+
+/**
+ * Represents the data required to request an OAuth2 token.
+ *
+ * @property grantType - The type of grant being requested (e.g., "authorization_code").
+ * @property code - The authorization code received from the authorization server.
+ * @property redirectUri - The URI to redirect to after authorization.
+ * @property clientId - The client identifier issued to the application.
+ * @property codeVerifier - The code verifier used for PKCE validation.
+ */
+
+export interface TokenRequestData {
+	grantType: string;
+	code: string;
+	redirectUri: string;
+	clientId: string;
+	codeVerifier: string;
 }
 
 /**
@@ -124,4 +142,36 @@ export const CodeRequestSchema: ZodType<CodeRequestData> = object({
 	codeChallengeMethod: data.code_challenge_method,
 	state: data.state,
 	scope: data.scope,
+}));
+
+/**
+ * Zod schema for validating OAuth2 token request data.
+ *
+ * This schema ensures that the incoming request contains all required fields for the
+ * "authorization_code" grant type, including `client_id`, `code`, `code_verifier`,
+ * `grant_type`, and `redirect_uri`. The `redirect_uri` field is further validated to
+ * ensure it is a valid URL.
+ *
+ * After validation, the schema transforms the input object to use camelCase property names:
+ * - `grantType`
+ * - `code`
+ * - `redirectUri`
+ * - `clientId`
+ * - `codeVerifier`
+ *
+ * @see TokenRequestData
+ */
+
+export const TokenRequestSchema: ZodType<TokenRequestData> = object({
+	client_id: requiredString('Client ID'),
+	code: requiredString('Code'),
+	code_verifier: requiredString('Code verifier'),
+	grant_type: literal('authorization_code', 'Only authorization_code grant type us supported'),
+	redirect_uri: requiredString('Redirect URI').pipe(url('Redirect URI must be a valid URL')),
+}).transform((data) => ({
+	grantType: data.grant_type,
+	code: data.code,
+	redirectUri: data.redirect_uri,
+	clientId: data.client_id,
+	codeVerifier: data.code_verifier,
 }));

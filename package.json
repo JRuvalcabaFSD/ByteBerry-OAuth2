@@ -43,7 +43,8 @@
 		"prebuild": "pnpm clean",
 		"docker:build": "TEST_VERSION=dev ./scripts/docker-build.sh",
 		"docker:run": "docker run --rm -p 4000:4000 --env-file .env jruvalcabafsd/byteberry-oauth2:dev",
-		"docs:build": "rimraf docs && typedoc --options typedoc.json"
+		"docs:build": "rimraf docs && typedoc --options typedoc.json",
+		"generate:keys": "node scripts/generate-keys.mjs"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.1.0",

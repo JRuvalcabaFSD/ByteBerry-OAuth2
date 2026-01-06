@@ -20,8 +20,15 @@ export class Config implements IConfig {
 	//OAuth2 environments
 	public readonly oauth2AuthCodeExpiresIn: number;
 
+	//JWT environments
+	public readonly jwtKeyId: string;
+	readonly jwtIssuer: string;
+	readonly jwtAudience: string[];
+	readonly jwtAccessTokenExpiresIn: number;
+
 	//Security environments
 	readonly corsOrigins: string[];
+	readonly bcryptRounds: number;
 
 	constructor() {
 		try {
@@ -44,12 +51,22 @@ export class Config implements IConfig {
 			// OAuth2 environments
 			// ========================================
 			this.oauth2AuthCodeExpiresIn = env.get('OAUTH2_AUTH_CODE_EXPIRES_IN').default('1').asIntPositive();
+
+			// ========================================
+			// JWT environments
+			// ========================================
+			this.jwtKeyId = env.get('JWT_KEY_ID').default('byteberry-key-1').asString();
+			this.jwtIssuer = env.get('JWT_ISSUER').default('https://byteberry.jrmdev.org').asString();
+			this.jwtAudience = env.get('JWT_AUDIENCE').default('byteberry-api,byteberry-bff').asArray();
+			this.jwtAccessTokenExpiresIn = env.get('JWT_ACCESS_TOKEN_EXPIRES_IN').default('900').asIntPositive();
+
 			// ========================================
 			// Security environments
 			// ========================================
 			this.corsOrigins = this.normalizeUrls(
 				env.get('CORS_ORIGINS').default('http://localhost:5173,http://localhost:4003,http://localhost:4000').asArray(',')
 			);
+			this.bcryptRounds = env.get('BCRYPT_ROUNDS').default('12').asIntPositive();
 		} catch (error) {
 			throw new ConfigError(`Failed to validate environment variables ${getErrMessage(error)}}`, this.generateContext());
 		}
