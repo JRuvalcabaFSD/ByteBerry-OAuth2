@@ -114,16 +114,6 @@ export class HealthService implements Interfaces.IHealthService {
 
 			const response = await this.checkHealth('deep', requestId, criticalServices);
 
-			const ctx = {
-				requestId: response.requestId,
-				status: response.status,
-				responseTime: this.clock.timestamp() - startTime,
-				dependenciesCount: Object.keys(response.dependencies).length,
-				jwksAvailable: response.jwks.status === 'healthy',
-				jwksKeyCount: response.jwks.keyCount,
-				jwksResponseTime: response.jwks.responseTime,
-			};
-
 			ctxLogger.debug('Deep health check completed', {
 				requestId: response.requestId,
 				status: response.status,
@@ -140,8 +130,6 @@ export class HealthService implements Interfaces.IHealthService {
 			const statusCode = response.status === 'healthy' ? 200 : response.status === 'degraded' ? 200 : 503;
 			res.status(statusCode).json(response);
 		} catch (error) {
-			console.log(error);
-
 			await this.handleHealthError(req, res, error as Error, 'basic');
 		}
 	};

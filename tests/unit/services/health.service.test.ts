@@ -37,6 +37,7 @@ describe('HealthService', () => {
 	let mockClock: Interfaces.IClock;
 	let mockLogger: Interfaces.ILogger;
 	let mockHealthRegistry: Interfaces.IHealthRegistry;
+	let mockJwksService: Interfaces.IJwksService;
 
 	beforeEach(() => {
 		mockConfig = {
@@ -62,7 +63,22 @@ describe('HealthService', () => {
 			] as [keyof ServiceMap, HealthCheckable][])),
 		} as unknown as Interfaces.IHealthRegistry;
 
-		healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry);
+		mockJwksService = {
+			getJwks: vi.fn(() => Promise.resolve({
+				keys: [
+					{
+						kty: 'RSA',
+						kid: 'test-kid',
+						use: 'sig',
+						alg: 'RS256',
+						n: 'test-modulus',
+						e: 'AQAB',
+					},
+				],
+			})),
+		} as unknown as Interfaces.IJwksService;
+
+		healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
 	});
 
 	describe('getHealth', () => {
@@ -214,12 +230,26 @@ describe('HealthService', () => {
 	});
 
 	describe('determineOverallStatus', () => {
+		const healthyJwks = {
+			status: 'healthy',
+			message: 'JWKS healthy',
+			keyCount: 1,
+			responseTime: 10,
+		} as Interfaces.JwksHealthResponse;
+
+		const unhealthyJwks = {
+			status: 'unhealthy',
+			message: 'JWKS unhealthy',
+			keyCount: 0,
+			responseTime: 10,
+		} as Interfaces.JwksHealthResponse;
+
 		it('should return unhealthy if any dependency is unhealthy', () => {
 			const dependencies = {
 				service1: { status: 'unhealthy' } as Interfaces.DependencyResponse,
 			};
 
-			const result = (healthService as any).determineOverallStatus(dependencies);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
 
 			expect(result).toBe('unhealthy');
 		});
@@ -229,9 +259,19 @@ describe('HealthService', () => {
 				service1: { status: 'healthy' } as Interfaces.DependencyResponse,
 			};
 
-			const result = (healthService as any).determineOverallStatus(dependencies);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
 
 			expect(result).toBe('healthy');
+		});
+
+		it('should return unhealthy if JWKS is unhealthy', () => {
+			const dependencies = {
+				service1: { status: 'healthy' } as Interfaces.DependencyResponse,
+			};
+
+			const result = (healthService as any).determineOverallStatus(dependencies, unhealthyJwks);
+
+			expect(result).toBe('unhealthy');
 		});
 
 		it('should return degraded if no unhealthy but some degraded', () => {
@@ -239,7 +279,7 @@ describe('HealthService', () => {
 				service1: { status: 'degraded' } as unknown as Interfaces.DependencyResponse,
 			};
 
-			const result = (healthService as any).determineOverallStatus(dependencies);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
 
 			expect(result).toBe('degraded');
 		});
@@ -266,7 +306,7 @@ describe('HealthService', () => {
 
 		it('should handle fallback on config error', async () => {
 			const brokenConfig = { ...mockConfig, serviceName: undefined } as unknown as typeof mockConfig;
-			healthService = new HealthService(brokenConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry);
+			healthService = new HealthService(brokenConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
 
 			const mockReq = {} as Request;
 			const mockRes = {
@@ -282,6 +322,128 @@ describe('HealthService', () => {
 			expect(mockRes.json).toHaveBeenCalledWith(
 				expect.objectContaining({
 					version: expect.any(String),
+				})
+			);
+		});
+	});
+
+	describe('checkJwksAvailability', () => {
+		it('should return healthy status when JWKS is available with valid keys', async () => {
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'healthy',
+					keyCount: 1,
+					responseTime: expect.any(Number),
+					message: expect.stringContaining('JWKS Service operational'),
+				})
+			);
+		});
+
+		it('should return unhealthy when JWKS service is not available', async () => {
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, null as any);
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 0,
+					message: expect.stringContaining('JWKS Service is not register'),
+				})
+			);
+		});
+
+		it('should return unhealthy when JWKS returns invalid structure', async () => {
+			mockJwksService.getJwks = vi.fn(() => Promise.resolve({ keys: null as any }));
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 0,
+					message: expect.stringContaining('invalid response structure'),
+				})
+			);
+		});
+
+		it('should return unhealthy when JWKS returns empty key set', async () => {
+			mockJwksService.getJwks = vi.fn(() => Promise.resolve({ keys: [] }));
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 0,
+					message: expect.stringContaining('empty key set'),
+				})
+			);
+		});
+
+		it('should return unhealthy when JWKS keys are malformed', async () => {
+			mockJwksService.getJwks = vi.fn(() => Promise.resolve({
+				keys: [
+					{
+						kty: 'RSA' as const,
+						kid: 'test-kid',
+						// missing required fields: use, alg, n, e
+					} as any,
+				],
+			} as Interfaces.JwksResponse));
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 1,
+					message: expect.stringContaining('malformed keys'),
+				})
+			);
+		});
+
+		it('should return unhealthy when JWKS has unsupported key type', async () => {
+			mockJwksService.getJwks = vi.fn(() => Promise.resolve({
+				keys: [
+					{
+						kty: 'EC' as any, // Invalid: should be RSA
+						kid: 'test-kid',
+						use: 'sig',
+						alg: 'RS256',
+						n: 'test-modulus',
+						e: 'AQAB',
+					} as any,
+				],
+			} as Interfaces.JwksResponse));
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 1,
+					message: expect.stringContaining('unsupported key type'),
+				})
+			);
+		});
+
+		it('should handle errors during JWKS check', async () => {
+			mockJwksService.getJwks = vi.fn(() => Promise.reject(new Error('JWKS service error')));
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+
+			const result = await (healthService as any).checkJwksAvailability();
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					status: 'unhealthy',
+					keyCount: 0,
+					message: expect.stringContaining('JWKS service check failed'),
 				})
 			);
 		});

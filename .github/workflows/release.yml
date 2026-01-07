@@ -47,9 +47,8 @@ jobs:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      # TODO F1
-      # - name: Generate JWT test keys
-      #   run: pnpm generate:keys
+      - name: Generate JWT test keys
+        run: pnpm generate:keys
 
       # TODO F2
       # - name: Generate Prisma Client

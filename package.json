@@ -20,6 +20,8 @@
 		"dev:css": "tailwindcss -i ./views/input.css -o ./public/css/output.css --postcss --watch",
 		"dev:app": "pnpm type-check && tsx --watch src/app.ts",
 		"start": "node dist/src/app.js",
+		"ci:all": "./scripts/test-release.sh",
+		"quality": "pnpm type-check && pnpm lint && pnpm audit && pnpm test:unit",
 		"test:all": "pnpm test:unit && pnpm test:integration",
 		"test:coverage:all": "pnpm test:unit:coverage && pnpm test:integration",
 		"test:coverage": "vitest run --coverage --config vitest.unit.config.ts",

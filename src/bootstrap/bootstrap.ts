@@ -26,7 +26,7 @@ interface bootstrapResult {
  * @throws {AppError} If an application-specific error occurs during bootstrap.
  * @throws {BootstrapError} If any other error occurs during bootstrap, wrapped with additional context.
  */
-export async function bootstrap({ skipDbValidation = false } = {}): Promise<bootstrapResult> {
+export async function bootstrap({ _skipDbValidation = false } = {}): Promise<bootstrapResult> {
 	let logger: ILogger | undefined;
 
 	try {

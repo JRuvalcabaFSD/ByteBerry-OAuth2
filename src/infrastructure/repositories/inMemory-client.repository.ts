@@ -32,25 +32,25 @@ export class InMemoryClientRepository implements IClientRepository {
 	public async findByClientId(clientId: string): Promise<ClientEntity | null> {
 		return MOCK_CLIENTS.find((c) => c.clientId === clientId) ?? null;
 	}
-	public async findById(Id: string): Promise<ClientEntity | null> {
+	public async findById(_Id: string): Promise<ClientEntity | null> {
 		throw new Error('Method not implemented.');
 	}
-	public async findByUserId(userId: string): Promise<ClientEntity[]> {
+	public async findByUserId(_userId: string): Promise<ClientEntity[]> {
 		throw new Error('Method not implemented.');
 	}
-	public async findAllByUserId(userId: string): Promise<ClientEntity[]> {
+	public async findAllByUserId(_userId: string): Promise<ClientEntity[]> {
 		throw new Error('Method not implemented.');
 	}
-	public async save(client: ClientEntity): Promise<void> {
+	public async save(_client: ClientEntity): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	public async update(client: ClientEntity): Promise<void> {
+	public async update(_client: ClientEntity): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	public async softDelete(id: string): Promise<void> {
+	public async softDelete(_id: string): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	public async existByClientId(clientId: string): Promise<boolean> {
+	public async existByClientId(_clientId: string): Promise<boolean> {
 		throw new Error('Method not implemented.');
 	}
 }
