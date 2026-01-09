@@ -77,6 +77,9 @@ export const urlsArray = (field: string) => {
 	);
 };
 
-export const grandTypesArray = (field: string) => {
-	return array(z.enum(VALID_GRANT_TYPES, `Invalid grant type, Valid types: ${VALID_GRANT_TYPES.join(', ')}`), `${field} must be an array`);
+export const grantTypesArray = (field: string) => {
+	return array(
+		z.enum(VALID_GRANT_TYPES, `Invalid grant type, Valid types: ${VALID_GRANT_TYPES.join(', ')}`),
+		`${field} must be an array`
+	).min(1, `${field} cannot be empty if provided`);
 };

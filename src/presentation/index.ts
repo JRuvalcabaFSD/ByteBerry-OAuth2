@@ -2,6 +2,7 @@
 export * from './controller/login.controller.js';
 export * from './controller/auth.controller.js';
 export * from './controller/user.controller.js';
+export * from './controller/client.controller.js';
 
 //Middleware
 export * from './middleware/session.handlers.js';

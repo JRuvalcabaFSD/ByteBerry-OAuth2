@@ -1,4 +1,4 @@
-import { ValidateClientRequestDto, ValidateClientResponseDto } from '@application';
+import { CreateClientRequestDTO, CreateClientResponseDTO, ValidateClientRequestDto, ValidateClientResponseDto } from '@application';
 
 /**
  * Extends the global ServiceMap interface to include the IConfig interface.
@@ -10,6 +10,7 @@ import { ValidateClientRequestDto, ValidateClientResponseDto } from '@applicatio
 declare module '@ServiceMap' {
 	interface ServiceMap {
 		ValidateClientUseCase: IValidateClientUseCase;
+		CreateClientUseCase: ICreateClientUseCase;
 	}
 }
 
@@ -39,4 +40,18 @@ declare module '@ServiceMap' {
 
 export interface IValidateClientUseCase {
 	execute(data: ValidateClientRequestDto): Promise<ValidateClientResponseDto>;
+}
+
+/**
+ * Use case for creating a new OAuth2 client.
+ *
+ * @interface ICreateClientUseCase
+ * @method execute - Creates a new client for the specified user.
+ * @param userId - The unique identifier of the user creating the client.
+ * @param request - The client creation request containing necessary configuration details.
+ * @returns A promise that resolves to the created client response with client credentials and metadata.
+ */
+
+export interface ICreateClientUseCase {
+	execute(userId: string, request: CreateClientRequestDTO): Promise<CreateClientResponseDTO>;
 }

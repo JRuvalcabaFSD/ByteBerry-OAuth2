@@ -6,6 +6,7 @@ import * as Routes from '@presentation';
 import { Injectable } from '@shared';
 import type { HomeResponse, IClock, IConfig, IHealthService, ILogger, ISessionRepository } from '@interfaces';
 import { createSessionMiddleware, createUserRoutes, RedirectToLoginErrorHandle, UnAuthorizedErrorHandle } from '@presentation';
+import { createClientRoutes } from './client.routes.js';
 
 /**
  * Augments the ServiceMap interface to include the AppRouter service.
@@ -34,6 +35,7 @@ declare module '@ServiceMap' {
 		'tokenController',
 		'jwksController',
 		'UserController',
+		'ClientController',
 	],
 })
 export class AppRouter {
@@ -49,7 +51,8 @@ export class AppRouter {
 		private readonly authCtl: Controllers.AuthController,
 		private readonly tokenCtl: Controllers.TokenController,
 		private readonly jwksCtl: Controllers.JwksController,
-		private readonly userCtl: Controllers.UserController
+		private readonly userCtl: Controllers.UserController,
+		private readonly clientCtl: Controllers.ClientController
 	) {
 		this.router = Router();
 		this.setupRoutes();
@@ -81,6 +84,9 @@ export class AppRouter {
 		const requireSessionRedirect = createSessionMiddleware(this.sessionRepository, this.logger, {
 			onError: new RedirectToLoginErrorHandle(),
 		});
+
+		// Client
+		this.router.use('/client', requireSession, createClientRoutes(this.clientCtl));
 
 		// User
 		this.router.use('/user', createUserRoutes(this.userCtl, requireSession));
