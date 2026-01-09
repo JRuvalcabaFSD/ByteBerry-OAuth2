@@ -13,6 +13,7 @@ declare module '@ServiceMap' {
 		CreateClientUseCase: ICreateClientUseCase;
 		ListClientUseCase: IListClientUseCase;
 		GetClientByIdUseCase: IGetClientByIdUseCase;
+		UpdateClientUseCase: IUpdateClientUseCase;
 	}
 }
 
@@ -87,4 +88,20 @@ export interface IListClientUseCase {
 
 export interface IGetClientByIdUseCase {
 	execute(userId: string, clientId: string): Promise<Dtos.ClientResponseDTO>;
+}
+
+/**
+ * Interface for the update client use case.
+ *
+ * @interface IUpdateClientUseCase
+ *
+ * @method execute - Updates an existing client with the provided request data.
+ * @param userId - The ID of the user performing the update.
+ * @param clientId - The ID of the client to be updated.
+ * @param request - The update client request DTO containing the new client data.
+ * @returns {Dtos.ClientResponseDTO} The updated client response DTO.
+ */
+
+export interface IUpdateClientUseCase {
+	execute(userId: string, clientId: string, request: Dtos.UpdateClientRequestDTO): Promise<Dtos.ClientResponseDTO>;
 }

@@ -1,4 +1,5 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { NotFoundRecordError } from './http.errors.js';
 
 /**
  * Represents an error that occurs during a database operation.
@@ -123,6 +124,9 @@ export function handledPrismaError(error: unknown): Error {
 				result = new ForeignKeyConstraintError(constraint, error);
 				break;
 			}
+			case 'P2025': // <--- AGREGAR ESTE CASO
+				result = new NotFoundRecordError(error.message);
+				break;
 			case 'P2011':
 				result = new UniqueConstraintError('null_constraint', error);
 				break;

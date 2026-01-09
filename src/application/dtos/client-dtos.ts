@@ -1,4 +1,4 @@
-import { CreateClientData, CreateClientSchema, formattedZodError } from '@application';
+import { CreateClientData, CreateClientSchema, formattedZodError, UpdateClientData, UpdateClientSchema } from '@application';
 import { ClientEntity } from '@domain';
 import { ValidateRequestError } from '@shared';
 
@@ -260,5 +260,58 @@ export class ClientResponseDTO {
 				updatedAt: this.client.updatedAt.toISOString(),
 			},
 		};
+	}
+}
+
+/**
+ * Data Transfer Object for updating an OAuth2 client.
+ *
+ * @class UpdateClientRequestDTO
+ * @description Represents the request payload for updating client credentials and configuration.
+ * All properties are optional, allowing partial updates of client settings.
+ *
+ * @property {string} [clientName] - The name of the OAuth2 client
+ * @property {string[]} [redirectUris] - Array of allowed redirect URIs for the client
+ * @property {string[]} [grantTypes] - Array of OAuth2 grant types the client is allowed to use
+ * @property {boolean} [isPublic] - Flag indicating whether the client is public or confidential
+ *
+ * @method fromBody - Static factory method to create and validate an UpdateClientRequestDTO from request body
+ * @param {Record<string, string>} body - The raw request body to validate and parse
+ * @returns {UpdateClientRequestDTO} A validated instance of UpdateClientRequestDTO
+ * @throws {ValidateRequestError} When validation against UpdateClientSchema fails
+ *
+ * @example
+ * const dto = UpdateClientRequestDTO.fromBody({
+ *   clientName: 'My App',
+ *   redirectUris: ['https://example.com/callback']
+ * });
+ */
+
+export class UpdateClientRequestDTO {
+	public readonly clientName?: string;
+	public readonly redirectUris?: string[];
+	public readonly grantTypes?: string[];
+	public readonly isPublic?: boolean;
+
+	private constructor(data: UpdateClientData) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Creates an UpdateClientData instance from a request body object.
+	 * @param body - The request body containing client update data as key-value pairs
+	 * @returns An UpdateClientRequestDTO instance with validated data
+	 * @throws {ValidateRequestError} When the body fails schema validation
+	 */
+
+	public static fromBody(body: Record<string, string>): UpdateClientData {
+		const resp = UpdateClientSchema.safeParse({ ...body });
+
+		if (!resp.success) {
+			const formatted = formattedZodError(resp.error, 'form');
+			throw new ValidateRequestError(formatted.msg, formatted.errors);
+		}
+
+		return new UpdateClientRequestDTO(resp.data);
 	}
 }

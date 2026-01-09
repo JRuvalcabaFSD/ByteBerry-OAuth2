@@ -189,7 +189,7 @@ export class ClientRepository implements IClientRepository {
 	public async update(client: ClientEntity): Promise<void> {
 		try {
 			await this.client.oAuthClient.update({
-				where: { id: client.clientId },
+				where: { clientId: client.clientId },
 				data: {
 					clientName: client.clientName,
 					redirectUris: client.redirectUris,
