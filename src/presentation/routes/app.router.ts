@@ -134,9 +134,9 @@ export class AppRouter {
 			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'POST' },
 			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'GET' },
 			{ name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
-			// { name: 'user', value: `${baseUrl}/user/register`, method: 'POST' },
-			// { name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
-			// { name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
+			{ name: 'user', value: `${baseUrl}/user/`, method: 'POST' },
+			{ name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
+			{ name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
 			// { name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
 			// { name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
 		];

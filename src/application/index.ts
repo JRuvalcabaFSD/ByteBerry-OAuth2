@@ -14,6 +14,7 @@ export * from './use-cases/auth/pkce-verifier.use-case.js';
 export * from './use-cases/client/validate-client.use-case.js';
 export * from './use-cases/user/register-user.use-case.js';
 export * from './use-cases/user/get-user.use-case.js';
+export * from './use-cases/user/update-user.use-case.js';
 
 //Validate Schemas
 export * from './validate-schemas/auth.schemas.js';

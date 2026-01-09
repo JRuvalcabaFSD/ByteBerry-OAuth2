@@ -62,14 +62,14 @@ export class TokenRequestDTO {
 	 */
 
 	public static fromBody(body: Record<string, string>): TokenRequestDTO {
-		const result = TokenRequestSchema.safeParse({ ...body });
+		const resp = TokenRequestSchema.safeParse({ ...body });
 
-		if (!result.success) {
-			const formatted = formattedZodError(result.error, 'text');
+		if (!resp.success) {
+			const formatted = formattedZodError(resp.error, 'text');
 			throw new ValidateRequestError(formatted.msg);
 		}
 
-		return new TokenRequestDTO(result.data);
+		return new TokenRequestDTO(resp.data);
 	}
 }
 

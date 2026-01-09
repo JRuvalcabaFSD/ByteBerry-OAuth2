@@ -1,68 +1,28 @@
 import { UserEntity } from '@domain';
 import { ValidateRequestError } from '@shared';
-import { formattedZodError, RegisterUserRequestData, UserRegisterSchema } from '@application';
+import {
+	formattedZodError,
+	RegisterUserRequestData,
+	UpdatePasswordRequestData,
+	UpdatePasswordSchema,
+	UpdateUserRequestData,
+	UpdateUserSchema,
+	UserRegisterSchema,
+} from '@application';
 
 /**
- * Represents the user data returned in the "me" endpoint response.
+ * Represents a user in the system.
  *
- * @property id - Unique identifier for the user.
- * @property email - User's email address.
- * @property username - User's username, or null if not set.
- * @property fullName - User's full name, or null if not set.
- * @property roles - Array of roles assigned to the user.
- * @property isActive - Indicates whether the user account is active.
- * @property emailVerified - Indicates whether the user's email has been verified.
- * @property createdAt - Date when the user account was created.
- */
-
-interface UserData {
-	id: string;
-	email: string;
-	username: string | null;
-	fullName: string | null;
-	roles: string[];
-	isActive: boolean;
-	emailVerified: boolean;
-	createdAt: Date;
-}
-
-/**
- * Represents the response data structure for the "me" user endpoint.
- * @property user - The user data associated with the current authenticated user.
- */
-
-interface UserResponseData {
-	user: UserData;
-}
-
-/**
- * Data Transfer Object (DTO) representing the response structure for the "me" user endpoint.
- *
- * Encapsulates the public user data to be sent to the client, ensuring sensitive fields are omitted.
- * Provides static and instance methods for transforming user entities and serializing the response.
- *
- * @remarks
- * - Use `UserMeResponseDTO.fromEntity` to create an instance from a `UserEntity`.
- * - The `toJSON` method serializes the `createdAt` field to an ISO string.
- *
- * @example
- * ```typescript
- * const dto = UserMeResponseDTO.fromEntity(userEntity);
- * return dto.toJSON();
- * ```
- */
-
-/**
- * Represents a user entity with authentication and profile information.
- *
- * @property id - Unique identifier for the user.
- * @property email - The user's email address.
- * @property username - The user's username, or null if not set.
- * @property fullName - The user's full name, or null if not set.
- * @property roles - Array of roles assigned to the user.
- * @property isActive - Indicates if the user account is active.
- * @property emailVerified - Indicates if the user's email has been verified.
- * @property createdAt - The date and time when the user was created.
+ * @interface User
+ * @property {string} id - The unique identifier of the user.
+ * @property {string} email - The email address of the user.
+ * @property {string | null} username - The username of the user. May be null if not set.
+ * @property {string | null} fullName - The full name of the user. May be null if not provided.
+ * @property {string[]} roles - An array of role identifiers assigned to the user.
+ * @property {boolean} isActive - Indicates whether the user account is currently active.
+ * @property {boolean} emailVerified - Indicates whether the user's email address has been verified.
+ * @property {Date} createdAt - The timestamp when the user account was created.
+ * @property {Date} updatedAt - The timestamp when the user account was last updated.
  */
 
 interface User {
@@ -74,38 +34,87 @@ interface User {
 	isActive: boolean;
 	emailVerified: boolean;
 	createdAt: Date;
+	updatedAt: Date;
 }
 
 /**
- * Represents the response data returned after a user registration operation.
- *
- * @property user - The registered user information.
- * @property message - A message describing the result of the registration process.
+ * Represents the response data structure for the "me" user endpoint.
+ * @property user - The user data associated with the current authenticated user.
  */
 
-interface RegisterUserResponseData {
+interface UserData {
 	user: User;
+}
+
+/**
+ * Represents a user object with string-formatted creation and update timestamps.
+ *
+ * This interface extends the `User` type, omitting the `createdAt` and `updatedAt` properties,
+ * and redefines them as strings (typically ISO date strings).
+ *
+ * @remarks
+ * Useful for scenarios where date fields need to be serialized or formatted as strings,
+ * such as API responses.
+ *
+ * @see User
+ *
+ * @property {string} createdAt - The ISO string representation of the user's creation date.
+ * @property {string} updatedAt - The ISO string representation of the user's last update date.
+ */
+
+interface UserObject extends Omit<User, 'createdAt' | 'updatedAt'> {
+	createdAt: string;
+	updatedAt: string;
+}
+
+/**
+ * Represents the response data for a user registration operation.
+ *
+ * @remarks
+ * This interface extends the base UserData interface and adds a message property
+ * to provide feedback about the registration process.
+ *
+ * @extends UserData
+ *
+ * @property {string} message - A message describing the result of the registration operation
+ *
+ * @example
+ * ```typescript
+ * const response: RegisterUserResponseData = {
+ *   id: '123',
+ *   email: 'user@example.com',
+ *   message: 'User registered successfully'
+ * };
+ * ```
+ */
+
+interface RegisterUserResponseData extends UserData {
 	message: string;
 }
 
 /**
- * Data Transfer Object (DTO) representing the authenticated user's profile information.
+ * Data Transfer Object for user response data.
  *
- * The `UserMeResponseDTO` encapsulates the public data of a user, typically used for
- * returning the current user's information in API responses. It provides a static
- * factory method to create an instance from a `UserEntity`, ensuring only the intended
- * fields are exposed, and includes serialization logic to format date fields appropriately.
+ * Encapsulates user information in a standardized format for API responses.
+ * Provides methods to create instances from domain entities and serialize
+ * the data to JSON format with proper date formatting.
  *
  * @remarks
- * - The `user` property contains the user's public data, including status and verification fields.
- * - Use `fromEntity` to construct an instance from a domain entity.
- * - Use `toJSON` to serialize the DTO for API responses.
+ * This DTO ensures a consistent response structure for user-related endpoints
+ * and handles the conversion of Date objects to ISO string format for JSON serialization.
+ *
+ * @example
+ * ```typescript
+ * const userEntity = new UserEntity({ ... });
+ * const userDto = UserResponseDTO.fromEntity(userEntity);
+ * const jsonResponse = userDto.toJSON();
+ * ```
  */
 
 export class UserResponseDTO {
-	public readonly user!: UserData;
+	public readonly user!: User;
 
-	private constructor(data: UserResponseData) {
+	private constructor(data: UserData) {
 		Object.assign(this, data);
 	}
 
@@ -122,9 +131,8 @@ export class UserResponseDTO {
 		return new UserResponseDTO({
 			user: {
 				...user.toPublic(),
-				isActive: user.isActive,
-				emailVerified: user.emailVerified,
 				createdAt: user.createdAt,
+				updatedAt: user.updatedAt,
 			},
 		});
 	}
@@ -136,7 +144,7 @@ export class UserResponseDTO {
 	 * @returns An object containing the user data, with `createdAt` as a string.
 	 */
 
-	public toJSON(): { user: Omit<UserData, 'createdAt'> & { createdAt: string } } {
+	public toJSON(): { user: Omit<User, 'createdAt'> & { createdAt: string } } {
 		return {
 			user: {
 				...this.user,
@@ -190,14 +198,14 @@ export class RegisterUserRequestDTO {
 	 */
 
 	public static fromBody(body: Record<string, string>, ip?: string): RegisterUserRequestDTO {
-		const result = UserRegisterSchema.safeParse({ ...body, ip });
+		const resp = UserRegisterSchema.safeParse({ ...body, ip });
 
-		if (!result.success) {
-			const resp = formattedZodError(result.error, 'form');
-			throw new ValidateRequestError(resp.msg, resp.errors);
+		if (!resp.success) {
+			const formatted = formattedZodError(resp.error, 'form');
+			throw new ValidateRequestError(formatted.msg, formatted.errors);
 		}
 
-		return new RegisterUserRequestDTO(result.data);
+		return new RegisterUserRequestDTO(resp.data);
 	}
 
 	private static isValidUsername(username: string): boolean {
@@ -249,9 +257,8 @@ export class RegisterUserResponseDTO {
 		return new RegisterUserResponseDTO({
 			user: {
 				...user.toPublic(),
-				isActive: user.isActive,
-				emailVerified: user.emailVerified,
 				createdAt: user.createdAt,
+				updatedAt: user.updatedAt,
 			},
 			message: 'User registered successfully',
 		});
@@ -274,6 +281,234 @@ export class RegisterUserResponseDTO {
 				createdAt: this.user.createdAt.toISOString(),
 			},
 			message: this.message,
+		};
+	}
+}
+
+/**
+ * Data Transfer Object for updating user information.
+ *
+ * This DTO validates and structures user update requests, ensuring that only
+ * valid data is processed. It supports partial updates where both `fullName`
+ * and `username` are optional.
+ *
+ * @remarks
+ * - Uses Zod schema validation through `UpdateUserSchema`
+ * - Throws `ValidateRequestError` when validation fails
+ * - Immutable properties ensure data integrity
+ *
+ * @example
+ * ```typescript
+ * const updateDto = UpdateUserRequestDTO.fromBody({
+ *   fullName: "John Doe",
+ *   username: "johndoe"
+ * });
+ * ```
+ */
+
+export class UpdateUserRequestDTO {
+	public readonly fullName?: string | null;
+	public readonly username?: string | null;
+
+	private constructor(data: UpdateUserRequestData) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Creates an UpdateUserRequestDTO instance from a request body object.
+	 *
+	 * @param body - The request body containing user update data as key-value pairs
+	 * @returns A new instance of UpdateUserRequestDTO with validated data
+	 * @throws {ValidateRequestError} When the body fails validation against UpdateUserSchema
+	 *
+	 * @remarks
+	 * This method validates the input body against the UpdateUserSchema using Zod's safeParse.
+	 * If validation fails, errors are formatted and thrown as a ValidateRequestError.
+	 */
+
+	public static fromBody(body: Record<string, string>): UpdateUserRequestDTO {
+		const resp = UpdateUserSchema.safeParse(body);
+
+		if (!resp.success) {
+			const formatted = formattedZodError(resp.error, 'form');
+			throw new ValidateRequestError(formatted.msg, formatted.errors);
+		}
+
+		return new UpdateUserRequestDTO(resp.data);
+	}
+}
+
+/**
+ * Data Transfer Object for update user response.
+ *
+ * @remarks
+ * This DTO encapsulates the user data returned after an update operation.
+ * It provides methods to convert from a UserEntity to a response format
+ * and to serialize the data to JSON with ISO string dates.
+ *
+ * @example
+ * ```typescript
+ * const responseDTO = UpdateUserResponseDTO.fromEntity(userEntity);
+ * const jsonResponse = responseDTO.toJSON();
+ * ```
+ */
+
+export class UpdateUserResponseDTO {
+	public readonly user!: User;
+
+	private constructor(data: UserData) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Creates an UpdateUserResponseDTO instance from a UserEntity.
+	 *
+	 * @param user - The UserEntity instance to convert to a DTO
+	 * @returns A new UpdateUserResponseDTO instance containing the user's public data along with creation and update timestamps
+	 *
+	 * @remarks
+	 * This method transforms a domain entity into a data transfer object suitable for API responses.
+	 * It includes all public user properties and adds the createdAt and updatedAt timestamps.
+	 */
+
+	public static fromEntity(user: UserEntity): UpdateUserResponseDTO {
+		return new UpdateUserResponseDTO({
+			user: {
+				...user.toPublic(),
+				createdAt: user.createdAt,
+				updatedAt: user.updatedAt,
+			},
+		});
+	}
+
+	/**
+	 * Converts the user DTO to a JSON-serializable object.
+	 *
+	 * @returns An object containing the user data with ISO string formatted dates.
+	 * The returned object has a `user` property with all user fields, where
+	 * `createdAt` and `updatedAt` are converted to ISO 8601 string format.
+	 */
+
+	public toJSON(): { user: UserObject } {
+		return {
+			user: {
+				...this.user,
+				createdAt: this.user.createdAt.toISOString(),
+				updatedAt: this.user.updatedAt.toISOString(),
+			},
+		};
+	}
+}
+
+/**
+ * Data Transfer Object for updating a user's password.
+ *
+ * This DTO encapsulates the data required to update a user's password,
+ * including the current password for verification, the new password to set,
+ * and an optional flag to revoke all active sessions.
+ *
+ * @remarks
+ * This class uses a private constructor to enforce creation through the
+ * static factory method `fromBody`, which validates the input data against
+ * the UpdatePasswordSchema before instantiation.
+ *
+ * @example
+ * ```typescript
+ * const updatePasswordDTO = UpdatePasswordRequestDTO.fromBody({
+ *   currentPassword: 'oldPassword123',
+ *   newPassword: 'newSecurePassword456',
+ *   revokeAllSessions: true
+ * });
+ * ```
+ */
+
+export class UpdatePasswordRequestDTO {
+	public readonly currentPassword!: string;
+	public readonly newPassword!: string;
+	public readonly revokeAllSessions?: boolean;
+
+	private constructor(data: UpdatePasswordRequestData) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Creates an UpdatePasswordRequestDTO instance from a request body object.
+	 *
+	 * @param body - The request body containing password update data as key-value pairs
+	 * @returns A new instance of UpdatePasswordRequestDTO with validated data
+	 * @throws {ValidateRequestError} When the body fails validation against UpdatePasswordSchema
+	 *
+	 * @remarks
+	 * This method validates the input body against the UpdatePasswordSchema using Zod.
+	 * If validation fails, errors are formatted and thrown as a ValidateRequestError.
+	 */
+
+	public static fromBody(body: Record<string, string>): UpdatePasswordRequestDTO {
+		const resp = UpdatePasswordSchema.safeParse({ ...body });
+
+		if (!resp.success) {
+			const formatted = formattedZodError(resp.error, 'form');
+			throw new ValidateRequestError(formatted.msg, formatted.errors);
+		}
+
+		return new UpdatePasswordRequestDTO(resp.data);
+	}
+}
+
+/**
+ * Data Transfer Object for the response of a password update operation.
+ *
+ * @remarks
+ * This DTO encapsulates the result of a password update request, including a success message
+ * and an optional flag indicating whether the user's session was revoked as a result of the
+ * password change.
+ *
+ * @example
+ * ```typescript
+ * // Create a successful response with session revocation
+ * const response = UpdatePasswordResponseDTO.success(true);
+ *
+ * // Create a successful response without session revocation
+ * const response = UpdatePasswordResponseDTO.success();
+ *
+ * // Convert to JSON for API response
+ * const jsonResponse = response.toJSON();
+ * ```
+ */
+
+export class UpdatePasswordResponseDTO {
+	public readonly message!: string;
+	public readonly sessionRevoked?: boolean;
+
+	private constructor(data: { message: string; sessionRevoked?: boolean }) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Creates a successful update password response DTO.
+	 *
+	 * @param sessionRevoked - Optional flag indicating whether the user's session was revoked after password update
+	 * @returns A new UpdatePasswordResponseDTO instance with a success message and session revocation status
+	 */
+
+	public static success(sessionRevoked?: boolean): UpdatePasswordResponseDTO {
+		return new UpdatePasswordResponseDTO({
+			message: 'Password updated successfully',
+			sessionRevoked,
+		});
+	}
+
+	/**
+	 * Converts the object to a JSON representation.
+	 *
+	 * @returns An object containing a message and optionally a sessionRevoked flag.
+	 * The sessionRevoked property is only included if it has been explicitly set.
+	 */
+
+	public toJSON(): { message: string; sessionRevoked?: boolean } {
+		return {
+			message: this.message,
+			...(this.sessionRevoked !== undefined && { sessionRevoked: this.sessionRevoked }),
 		};
 	}
 }
