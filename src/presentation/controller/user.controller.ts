@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { Injectable } from '@shared';
-import { RegisterUserRequestDTO, UpdateUserRequestDTO } from '@application';
-import type { IGetUserUseCase, IRegisterUserUseCase, IUpdateUserUseCase } from '@interfaces';
+import { RegisterUserRequestDTO, UpdatePasswordRequestDTO, UpdateUserRequestDTO } from '@application';
+import type { IGetUserUseCase, IRegisterUserUseCase, IUpdatePasswordUseCase, IUpdateUserUseCase } from '@interfaces';
 
 //TODO documentar
 declare module '@ServiceMap' {
@@ -11,13 +11,40 @@ declare module '@ServiceMap' {
 	}
 }
 
-//TODO documentar
-@Injectable({ name: 'UserController', depends: ['RegisterUserUseCase', 'GetUserUseCase', 'UpdateUserUseCase'] })
+/**
+ * Controller responsible for handling user-related HTTP requests.
+ *
+ * @remarks
+ * This controller implements user management operations including registration,
+ * retrieval, updates, and password management. It follows the dependency injection
+ * pattern and delegates business logic to respective use case implementations.
+ *
+ * All methods are designed to work with Express middleware and follow a consistent
+ * error handling pattern by passing errors to the next middleware function.
+ *
+ * @example
+ * ```typescript
+ * const userController = new UserController(
+ *   registerUseCase,
+ *   getUserUseCase,
+ *   updateUserUseCase,
+ *   updatePasswordUseCase
+ * );
+ *
+ * router.post('/register', userController.register);
+ * router.get('/me', authenticate, userController.getMe);
+ * router.put('/me', authenticate, userController.updateMe);
+ * router.put('/me/password', authenticate, userController.updatePassword);
+ * ```
+ */
+
+@Injectable({ name: 'UserController', depends: ['RegisterUserUseCase', 'GetUserUseCase', 'UpdateUserUseCase', 'UpdatePasswordUseCase'] })
 export class UserController {
 	constructor(
 		private readonly registerUseCase: IRegisterUserUseCase,
 		private readonly getUseCase: IGetUserUseCase,
-		private readonly updateUserUseCase: IUpdateUserUseCase
+		private readonly updateUserUseCase: IUpdateUserUseCase,
+		private readonly updatePasswordUseCase: IUpdatePasswordUseCase
 	) {}
 
 	/**
@@ -93,6 +120,27 @@ export class UserController {
 			const request = UpdateUserRequestDTO.fromBody(req.body);
 			const response = await this.updateUserUseCase.execute(userId, request);
 
+			res.status(200).json(response.toJSON());
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	/**
+	 * Updates the password for the authenticated user.
+	 *
+	 * @param req - Express request object containing the user's authentication data and new password in the body
+	 * @param res - Express response object used to send the update result
+	 * @param next - Express next function for error handling middleware
+	 * @returns A promise that resolves when the password update is complete
+	 * @throws Will pass any errors to the next middleware handler
+	 */
+
+	public updatePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user!.userId;
+			const request = UpdatePasswordRequestDTO.fromBody(req.body);
+			const response = await this.updatePasswordUseCase.execute(userId, request);
 			res.status(200).json(response.toJSON());
 		} catch (error) {
 			next(error);

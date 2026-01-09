@@ -117,7 +117,7 @@ export class UserRepository implements IUserRepository {
 			if (!user) return null;
 
 			const entity = UserEntity.create({ ...user });
-			const isValid = this.hashService.verifyPassword(password, user.passwordHash);
+			const isValid = await this.hashService.verifyPassword(password, user.passwordHash);
 
 			if (!isValid) return null;
 

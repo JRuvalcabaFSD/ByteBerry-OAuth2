@@ -54,7 +54,7 @@ export interface UpdatePasswordRequestData {
  * ensuring type safety between runtime validation and TypeScript types.
  */
 
-export type UserUpdateData = z.infer<typeof UserUpdateSchema>;
+export type UserUpdateData = z.infer<typeof UpdateUserSchema>;
 
 /**
  * Zod schema for validating user registration data.
@@ -141,7 +141,7 @@ export const UpdateUserSchema: z.ZodType<UpdateUserRequestData> = z
 export const UpdatePasswordSchema: z.ZodType<UpdatePasswordRequestData> = z
 	.object({
 		currentPassword: requiredString('Current Password'),
-		newPassword: requiredString('New password').pipe(maxMinString({ field: 'New password', max: 8, min: 16 })),
+		newPassword: requiredString('New password').pipe(maxMinString({ field: 'New password', max: 24, min: 6 })),
 		revokeAllSessions: booleanString('revokeAllSessions').optional(),
 	})
 	.refine((data) => data.currentPassword !== data.newPassword, {
