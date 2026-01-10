@@ -15,6 +15,7 @@ export * from './use-cases/client/get-client.use-case.js';
 export * from './use-cases/client/list-client-use-case.js';
 export * from './use-cases/client/validate-client.use-case.js';
 export * from './use-cases/client/update-client.use-case.js';
+export * from './use-cases/client/delete-client.use-case.js';
 export * from './use-cases/user/get-user.use-case.js';
 export * from './use-cases/user/register-user.use-case.js';
 export * from './use-cases/user/update-password.use-case.js';

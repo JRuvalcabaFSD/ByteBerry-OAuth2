@@ -148,6 +148,7 @@ export class AppRouter {
 			{ name: 'listClients', value: `${baseUrl}/client`, method: 'GET' },
 			{ name: 'getClient', value: `${baseUrl}/client/:id`, method: 'GET' },
 			{ name: 'updateClient', value: `${baseUrl}/client/:id`, method: 'PUT' },
+			{ name: 'deleteClient', value: `${baseUrl}/client/:id`, method: 'DELETE' },
 		];
 
 		return routes.reduce(

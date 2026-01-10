@@ -14,6 +14,7 @@ declare module '@ServiceMap' {
 		ListClientUseCase: IListClientUseCase;
 		GetClientByIdUseCase: IGetClientByIdUseCase;
 		UpdateClientUseCase: IUpdateClientUseCase;
+		DeleteClientUseCase: IDeleteClientUseCase;
 	}
 }
 
@@ -104,4 +105,18 @@ export interface IGetClientByIdUseCase {
 
 export interface IUpdateClientUseCase {
 	execute(userId: string, clientId: string, request: Dtos.UpdateClientRequestDTO): Promise<Dtos.ClientResponseDTO>;
+}
+
+/**
+ * Use case interface for deleting a client.
+ *
+ * @interface IDeleteClient
+ * @method execute - Deletes a client for a specific user.
+ * @param {string} userId - The ID of the user who owns the client.
+ * @param {string} clientId - The ID of the client to delete.
+ * @returns {Promise<void>} A promise that resolves when the client is successfully deleted.
+ */
+
+export interface IDeleteClientUseCase {
+	execute(userId: string, clientId: string): Promise<void>;
 }

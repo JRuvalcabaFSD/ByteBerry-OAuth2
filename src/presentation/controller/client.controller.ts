@@ -1,5 +1,11 @@
 import { CreateClientRequestDTO, UpdateClientRequestDTO } from '@application';
-import type { ICreateClientUseCase, IGetClientByIdUseCase, IListClientUseCase, IUpdateClientUseCase } from '@interfaces';
+import type {
+	ICreateClientUseCase,
+	IDeleteClientUseCase,
+	IGetClientByIdUseCase,
+	IListClientUseCase,
+	IUpdateClientUseCase,
+} from '@interfaces';
 import { Injectable } from '@shared';
 import { NextFunction, Request, Response } from 'express';
 
@@ -18,31 +24,38 @@ declare module '@ServiceMap' {
 }
 
 /**
- * Controller responsible for managing OAuth2 clients.
+ * Controller for managing OAuth2 clients.
  *
- * Handles HTTP requests for creating, retrieving, listing, and updating OAuth2 clients
- * for authenticated users. All operations are scoped to the authenticated user's context.
+ * Handles HTTP requests for client CRUD operations (Create, Read, Update, Delete).
+ * All operations require authentication and are scoped to the authenticated user.
  *
- * @class ClientController
+ * @remarks
+ * This controller uses dependency injection to receive use case implementations.
+ * All methods follow a consistent error handling pattern by passing errors to the next middleware.
  *
  * @example
- * // Usage in Express routing
- * router.post('/clients', clientController.create);
- * router.get('/clients', clientController.list);
- * router.get('/clients/:id', clientController.getById);
- * router.patch('/clients/:id', clientController.update);
+ * ```typescript
+ * const controller = new ClientController(
+ *   createUseCase,
+ *   listUseCase,
+ *   getUseCase,
+ *   updateUseCase,
+ *   deleteUseCase
+ * );
+ * ```
  */
 
 @Injectable({
 	name: 'ClientController',
-	depends: ['CreateClientUseCase', 'ListClientUseCase', 'GetClientByIdUseCase', 'UpdateClientUseCase'],
+	depends: ['CreateClientUseCase', 'ListClientUseCase', 'GetClientByIdUseCase', 'UpdateClientUseCase', 'DeleteClientUseCase'],
 })
 export class ClientController {
 	constructor(
 		private readonly createUseCase: ICreateClientUseCase,
 		private readonly listUseCase: IListClientUseCase,
 		private readonly getUseCase: IGetClientByIdUseCase,
-		private readonly updateUseCase: IUpdateClientUseCase
+		private readonly updateUseCase: IUpdateClientUseCase,
+		private readonly deleteUseCase: IDeleteClientUseCase
 	) {}
 
 	/**
@@ -146,6 +159,29 @@ export class ClientController {
 			const response = await this.updateUseCase.execute(userId, clientId, request);
 
 			res.status(200).json(response.toJSON());
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	/**
+	 * Deletes a client by ID.
+	 *
+	 * @param req - The Express request object containing the authenticated user and client ID in params
+	 * @param _res - The Express response object (unused)
+	 * @param next - The Express next function for error handling
+	 * @returns A promise that resolves when the client is successfully deleted
+	 * @throws Passes errors to the next middleware via the error handler
+	 */
+
+	public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user!.userId;
+			const clientId = req.params.id;
+
+			await this.deleteUseCase.execute(userId, clientId);
+
+			res.status(204).send();
 		} catch (error) {
 			next(error);
 		}

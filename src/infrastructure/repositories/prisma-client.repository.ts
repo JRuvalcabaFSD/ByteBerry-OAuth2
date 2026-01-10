@@ -222,7 +222,7 @@ export class ClientRepository implements IClientRepository {
 	@LogContextMethod()
 	public async softDelete(id: string): Promise<void> {
 		try {
-			await this.client.oAuthClient.update({ where: { id }, data: { isActive: false, updatedAt: new Date() } });
+			await this.client.oAuthClient.update({ where: { clientId: id }, data: { isActive: false, updatedAt: new Date() } });
 			this.logger.debug('OAuth client soft deleted', { id });
 		} catch (error) {
 			this.logger.error('OAuth client soft delete failed', { id });
