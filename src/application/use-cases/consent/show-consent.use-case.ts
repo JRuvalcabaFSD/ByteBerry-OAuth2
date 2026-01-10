@@ -1,6 +1,6 @@
 import { Injectable, LogContextClass, LogContextMethod } from '@shared';
 import type { ILogger, IShowConsentUseCase, IValidateClientUseCase } from '@interfaces';
-import { CodeRequestDTO, ConsentScreenData, ScopeDisplayDTO } from 'src/application/dtos/auth.dtos.js';
+import { CodeRequestDTO, ConsentScreenData, ScopeDisplayDTO } from '@application';
 
 /**
  * Use case for preparing and displaying the OAuth2 consent screen.
