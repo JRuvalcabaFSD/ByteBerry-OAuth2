@@ -1,6 +1,6 @@
-import { CodeRequestDTO, CodeResponseDTO, LoginRequestDTO, LoginResponseDTO, TokenRequestDTO, TokenResponseDTO } from '@application';
 import { CodeChallengeVO } from '@domain';
 import { JwksResponse } from '@interfaces';
+import { CodeRequestDTO, CodeResponseDTO, LoginRequestDTO, LoginResponseDTO, TokenRequestDTO, TokenResponseDTO } from '@application';
 
 //TODO documentar
 declare module '@ServiceMap' {
@@ -10,6 +10,7 @@ declare module '@ServiceMap' {
 		PkceVerifierUseCase: IPkceVerifierUseCase;
 		ExchangeTokenUseCase: IExchangeTokenUseCase;
 		GetJwksUseCase: IGetJwksUseCase;
+		CheckConsentUseCase: ICheckConsentUseCase;
 	}
 }
 
@@ -111,4 +112,20 @@ export interface IExchangeTokenUseCase {
 
 export interface IGetJwksUseCase {
 	execute(): Promise<JwksResponse>;
+}
+
+/**
+ * Use case for checking if a user has granted consent for a client application.
+ *
+ * @interface ICheckConsentUseCase
+ *
+ * @method execute
+ * @param {string} userId - The unique identifier of the user.
+ * @param {string} clientId - The unique identifier of the client application.
+ * @param {string[]} [requestedScopes] - Optional array of scopes requested by the client.
+ * @returns {Promise<boolean>} A promise that resolves to true if the user has granted consent for the specified client and scopes, false otherwise.
+ */
+
+export interface ICheckConsentUseCase {
+	execute(userId: string, clientId: string, requestedScopes?: string[]): Promise<boolean>;
 }

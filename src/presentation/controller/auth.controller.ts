@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { Injectable, InvalidCodeError } from '@shared';
+import { ConsentRequiredError, Injectable, InvalidCodeError } from '@shared';
 import { CodeRequestDTO, TokenRequestDTO } from '@application';
 import type { IExchangeTokenUseCase, IGenerateAuthCodeUseCase, IGetJwksUseCase } from '@interfaces';
 
@@ -33,9 +33,9 @@ declare module '@ServiceMap' {
 export class AuthController {
 	constructor(private readonly useCase: IGenerateAuthCodeUseCase) {}
 
-	public handle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+	public authorize = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		const request = CodeRequestDTO.fromQuery(req.query as Record<string, string>);
 		try {
-			const request = CodeRequestDTO.fromQuery(req.query as Record<string, string>);
 			const userId = req.user?.userId;
 
 			if (!userId) throw new InvalidCodeError('Authentication required');
@@ -45,6 +45,16 @@ export class AuthController {
 
 			res.redirect(redirectUri);
 		} catch (error) {
+			if (error instanceof ConsentRequiredError) {
+				// ✅ F2: Return simple response indicating consent is needed
+				// F3: Will redirect to consent screen HTML
+				res.status(200).json({
+					message: 'Consent required',
+					consentUrl: `/auth/consent?${new URLSearchParams(req.query as Record<string, string>).toString()}`,
+					clientId: request.clientId,
+					scopes: request.scope?.split(' ') || [],
+				});
+			}
 			next(error);
 		}
 	};

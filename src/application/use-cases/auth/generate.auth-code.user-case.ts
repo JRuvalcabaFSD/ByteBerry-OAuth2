@@ -2,8 +2,15 @@ import { randomBytes } from 'crypto';
 
 import { CodeRequestDTO, CodeResponseDTO } from '@application';
 import { AppError, ClientIdVO, CodeChallengeVO, CodeEntity } from '@domain';
-import { getErrMessage, Injectable, LogContextClass, LogContextMethod } from '@shared';
-import type { ICodeRepository, IConfig, IGenerateAuthCodeUseCase, ILogger, IValidateClientUseCase } from '@interfaces';
+import { ConsentRequiredError, getErrMessage, Injectable, LogContextClass, LogContextMethod } from '@shared';
+import type {
+	ICheckConsentUseCase,
+	ICodeRepository,
+	IConfig,
+	IGenerateAuthCodeUseCase,
+	ILogger,
+	IValidateClientUseCase,
+} from '@interfaces';
 
 /**
  * Use case for generating OAuth 2.0 authorization codes.
@@ -37,37 +44,35 @@ import type { ICodeRepository, IConfig, IGenerateAuthCodeUseCase, ILogger, IVali
  */
 
 @LogContextClass()
-@Injectable({ name: 'GenerateCodeUseCase', depends: ['CodeRepository', 'ValidateClientUseCase', 'Logger', 'Config'] })
+@Injectable({
+	name: 'GenerateCodeUseCase',
+	depends: ['CodeRepository', 'ValidateClientUseCase', 'CheckConsentUseCase', 'Logger', 'Config'],
+})
 export class GenerateAuthCodeUseCase implements IGenerateAuthCodeUseCase {
 	private readonly expirationMinutes: number;
 
 	constructor(
 		private readonly repository: ICodeRepository,
 		private readonly validateClient: IValidateClientUseCase,
+		private readonly checkConsent: ICheckConsentUseCase,
 		private readonly logger: ILogger,
 		readonly config: IConfig
 	) {
 		this.expirationMinutes = config.oauth2AuthCodeExpiresIn ?? 1;
 	}
+
 	/**
-	 * Generates an authorization code for OAuth2 authorization code flow.
+	 * Generates an OAuth 2.0 authorization code for a user.
 	 *
-	 * This method validates the client credentials, creates a secure authorization code,
-	 * and stores it in the repository with an expiration time.
+	 * Validates the client credentials and user consent before generating a secure authorization code.
+	 * The code is stored in the repository and returned along with the state parameter.
 	 *
-	 * @param userId - The unique identifier of the user granting authorization
-	 * @param request - The code request data containing client credentials and PKCE parameters
-	 * @returns A promise that resolves to a CodeResponseDTO containing the generated code and state
-	 *
-	 * @throws {AppError} When client validation fails or repository operations fail
-	 * @throws {Error} When an unexpected error occurs during code generation
-	 *
-	 * @remarks
-	 * - Validates client ID, redirect URI, and grant type before generating the code
-	 * - Generates a cryptographically secure random 32-byte code encoded in base64
-	 * - Supports PKCE (Proof Key for Code Exchange) with code challenge validation
-	 * - Logs the authorization flow for debugging and security auditing
-	 * - The generated code expires after the configured expiration time
+	 * @param userId - The unique identifier of the user requesting authorization
+	 * @param request - The authorization code request containing clientId, redirectUri, scope, codeChallenge, codeChallengeMethod, and state
+	 * @returns A promise that resolves to a CodeResponseDTO containing the generated authorization code and state
+	 * @throws {Error} Throws 'CONSENT_REQUIRED' error if the user has not granted consent for the requested scopes
+	 * @throws {AppError} Throws application-specific errors for client validation or repository failures
+	 * @throws {Error} Throws unexpected errors during the authorization code generation process
 	 */
 
 	@LogContextMethod()
@@ -86,6 +91,27 @@ export class GenerateAuthCodeUseCase implements IGenerateAuthCodeUseCase {
 				clientId: clientInfo.clientId,
 				redirectUri: clientInfo.redirectUris,
 				grandType: clientInfo.grantTypes,
+			});
+
+			// Validate consents
+			const requestedScopes = request.scope ? request.scope.split(' ') : [];
+			const hasConsent = await this.checkConsent.execute(userId, request.clientId, requestedScopes);
+
+			if (!hasConsent) {
+				this.logger.info('User consent required', {
+					userId,
+					clientId: request.clientId,
+					requestedScopes,
+				});
+
+				// En F2, simplemente lanzamos un error indicando que se necesita consent
+				// TODO En F3, esto redirigirá a la pantalla de consent
+				throw new ConsentRequiredError(); // Error especial para indicar que se necesita consent
+			}
+
+			this.logger.debug('User has valid consent, proceeding with code generation', {
+				userId,
+				clientId: request.clientId,
 			});
 
 			// Generate clientId and codeChallenge

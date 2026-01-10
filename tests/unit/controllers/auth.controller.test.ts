@@ -48,7 +48,7 @@ describe('AuthController', () => {
 
 		vi.spyOn(mockUseCase, 'execute').mockResolvedValue(mockAuthResponse as any);
 
-		await authController.handle(mockRequest as Request, mockResponse as Response, mockNext);
+		await authController.authorize(mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockUseCase.execute).toHaveBeenCalledWith('user123', expect.any(Object));
 		expect(mockAuthResponse.buildRedirectURrl).toHaveBeenCalledWith('https://example.com/callback');
@@ -58,7 +58,7 @@ describe('AuthController', () => {
 	it('should throw InvalidCodeError when userId is missing', async () => {
 		mockRequest.user = undefined;
 
-		await authController.handle(mockRequest as Request, mockResponse as Response, mockNext);
+		await authController.authorize(mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockNext).toHaveBeenCalledWith(expect.any(InvalidCodeError));
 	});
@@ -68,7 +68,7 @@ describe('AuthController', () => {
 
 		vi.spyOn(mockUseCase, 'execute').mockRejectedValue(testError);
 
-		await authController.handle(mockRequest as Request, mockResponse as Response, mockNext);
+		await authController.authorize(mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockNext).toHaveBeenCalledWith(testError);
 	});
@@ -86,7 +86,7 @@ describe('AuthController', () => {
 
 		vi.spyOn(mockUseCase, 'execute').mockResolvedValue(mockAuthResponse as any);
 
-		await authController.handle(mockRequest as Request, mockResponse as Response, mockNext);
+		await authController.authorize(mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockNext).toHaveBeenCalledWith(testError);
 	});

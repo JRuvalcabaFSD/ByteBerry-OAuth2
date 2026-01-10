@@ -237,6 +237,38 @@ export class InvalidUser extends HttpError {
 }
 
 /**
+ * Error thrown when user consent is required for an OAuth2 operation.
+ *
+ * @extends HttpError
+ *
+ * @property {string} consentUrl - The URL to redirect the user to for consent, including redirect URL parameters
+ * @property {string} clientId - The OAuth2 client identifier
+ * @property {string} scopes - The requested OAuth2 scopes
+ *
+ * @example
+ * const error = new ConsentRequiredError(
+ *   'User consent required',
+ *   'https://example.com/callback',
+ *   'client-123',
+ *   'read write'
+ * );
+ *
+ * @param {string} msg - Error message
+ * @param {string} redirect_url - The redirect URL to include in the consent URL parameters
+ * @param {string} clientId - The OAuth2 client identifier
+ * @param {string} scopes - The requested OAuth2 scopes
+ */
+
+export class ConsentRequiredError extends HttpError {
+	constructor() {
+		super('Consent required', 'oauth', 'Consent Required', 200);
+		this.name = 'ConsentRequiredError';
+
+		Error.captureStackTrace(this, ConsentRequiredError);
+	}
+}
+
+/**
  * Represents an HTTP 401 Unauthorized error thrown when user credentials are invalid.
  *
  * Typically used during authentication processes to indicate that the provided credentials

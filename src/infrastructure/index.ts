@@ -20,6 +20,7 @@ export * from './mappers/code.mapper.js';
 //Repositories
 export * from './repositories/prisma-client.repository.js';
 export * from './repositories/prisma-code.repository.js';
+export * from './repositories/prisma-consent.repository.js';
 export * from './repositories/prisma-session.repository.js';
 export * from './repositories/prisma-user.repository.js';
 

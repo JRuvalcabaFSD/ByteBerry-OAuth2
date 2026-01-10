@@ -16,6 +16,7 @@ export * from './repositories/user.repository.interface.js';
 export * from './repositories/session.repository.interface.js';
 export * from './repositories/code.repository.interface.js';
 export * from './repositories/client.repository.interface.js';
+export * from './repositories/consent.repository.interface.js';
 
 //Services
 export * from './services/clock.service.interface.js';
