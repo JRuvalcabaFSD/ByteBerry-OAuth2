@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { ConsentRequiredError, Injectable, InvalidCodeError } from '@shared';
 import { CodeRequestDTO, TokenRequestDTO } from '@application';
-import type { IExchangeTokenUseCase, IGenerateAuthCodeUseCase, IGetJwksUseCase } from '@interfaces';
+import type { IConfig, IExchangeTokenUseCase, IGenerateAuthCodeUseCase, IGetJwksUseCase, IShowConsentUseCase } from '@interfaces';
 
 //TODO documentar
 declare module '@ServiceMap' {
@@ -29,9 +29,16 @@ declare module '@ServiceMap' {
  * ```
  */
 
-@Injectable({ name: 'authController', depends: ['GenerateCodeUseCase'] })
+@Injectable({ name: 'authController', depends: ['GenerateCodeUseCase', 'ShowConsentUseCase', 'Config'] })
 export class AuthController {
-	constructor(private readonly useCase: IGenerateAuthCodeUseCase) {}
+	private readonly version: string;
+	constructor(
+		private readonly authUseCase: IGenerateAuthCodeUseCase,
+		private readonly consentUseCase: IShowConsentUseCase,
+		config: IConfig
+	) {
+		this.version = config.version;
+	}
 
 	public authorize = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		const request = CodeRequestDTO.fromQuery(req.query as Record<string, string>);
@@ -40,7 +47,7 @@ export class AuthController {
 
 			if (!userId) throw new InvalidCodeError('Authentication required');
 
-			const response = this.useCase.execute(userId, request);
+			const response = this.authUseCase.execute(userId, request);
 			const redirectUri = (await response).buildRedirectURrl(request.redirectUri);
 
 			res.redirect(redirectUri);
@@ -50,11 +57,31 @@ export class AuthController {
 				// F3: Will redirect to consent screen HTML
 				res.status(200).json({
 					message: 'Consent required',
-					consentUrl: `/auth/consent?${new URLSearchParams(req.query as Record<string, string>).toString()}`,
+					consentUrl: `/auth/authorize/consent?${new URLSearchParams(req.query as Record<string, string>).toString()}`,
 					clientId: request.clientId,
 					scopes: request.scope?.split(' ') || [],
 				});
 			}
+			next(error);
+		}
+	};
+
+	public showConsentScreen = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user?.userId;
+
+			if (!userId) throw new InvalidCodeError('Authentication required');
+
+			const request = CodeRequestDTO.fromQuery(req.query as Record<string, string>);
+			const response = await this.consentUseCase.execute(request);
+
+			return res.render('consent', {
+				...response,
+				userEmail: 'usuario@byteberry.dev',
+				version: this.version,
+				nonce: res.locals.nonce,
+			});
+		} catch (error) {
 			next(error);
 		}
 	};

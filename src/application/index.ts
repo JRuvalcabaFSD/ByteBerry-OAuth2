@@ -11,6 +11,7 @@ export * from './use-cases/auth/get-jwks.use-case.js';
 export * from './use-cases/auth/login.use-case.js';
 export * from './use-cases/auth/pkce-verifier.use-case.js';
 export * from './use-cases/auth/check-consent.use-case.js';
+export * from './use-cases/auth/show-consent.use-case.js';
 export * from './use-cases/client/create-client.use-case.js';
 export * from './use-cases/client/get-client.use-case.js';
 export * from './use-cases/client/list-client-use-case.js';

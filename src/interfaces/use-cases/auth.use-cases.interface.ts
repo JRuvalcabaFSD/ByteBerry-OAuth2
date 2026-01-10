@@ -1,6 +1,7 @@
+import * as Dtos from '@application';
+
 import { CodeChallengeVO } from '@domain';
 import { JwksResponse } from '@interfaces';
-import { CodeRequestDTO, CodeResponseDTO, LoginRequestDTO, LoginResponseDTO, TokenRequestDTO, TokenResponseDTO } from '@application';
 
 //TODO documentar
 declare module '@ServiceMap' {
@@ -11,6 +12,7 @@ declare module '@ServiceMap' {
 		ExchangeTokenUseCase: IExchangeTokenUseCase;
 		GetJwksUseCase: IGetJwksUseCase;
 		CheckConsentUseCase: ICheckConsentUseCase;
+		ShowConsentUseCase: IShowConsentUseCase;
 	}
 }
 
@@ -29,7 +31,7 @@ declare module '@ServiceMap' {
  */
 
 export interface ILoginUseCase {
-	execute(request: LoginRequestDTO): Promise<LoginResponseDTO>;
+	execute(request: Dtos.LoginRequestDTO): Promise<Dtos.LoginResponseDTO>;
 }
 
 /**
@@ -44,7 +46,7 @@ export interface ILoginUseCase {
  */
 
 export interface IGenerateAuthCodeUseCase {
-	execute(userId: string, request: CodeRequestDTO): Promise<CodeResponseDTO>;
+	execute(userId: string, request: Dtos.CodeRequestDTO): Promise<Dtos.CodeResponseDTO>;
 }
 
 /**
@@ -90,7 +92,7 @@ export interface IPkceVerifierUseCase {
  */
 
 export interface IExchangeTokenUseCase {
-	execute(request: TokenRequestDTO): Promise<TokenResponseDTO>;
+	execute(request: Dtos.TokenRequestDTO): Promise<Dtos.TokenResponseDTO>;
 }
 
 /**
@@ -128,4 +130,18 @@ export interface IGetJwksUseCase {
 
 export interface ICheckConsentUseCase {
 	execute(userId: string, clientId: string, requestedScopes?: string[]): Promise<boolean>;
+}
+
+/**
+ * Use case interface for displaying the consent screen during OAuth 2.0 authorization flow.
+ *
+ * @interface IShowConsentUseCase
+ *
+ * @method execute - Processes a code request and returns the consent screen data to be displayed to the user.
+ * @param request - The code request DTO containing authorization parameters
+ * @returns A promise that resolves to the consent screen data
+ */
+
+export interface IShowConsentUseCase {
+	execute(request: Dtos.CodeRequestDTO): Promise<Dtos.ConsentScreenData>;
 }

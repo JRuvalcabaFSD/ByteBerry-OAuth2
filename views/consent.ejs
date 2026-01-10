@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ByteBerry - Autorización de Aplicación</title>
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+	<link rel="stylesheet" href="/css/output.css">
+</head>
+
+<body class="bg-dark-300 min-h-screen flex items-center justify-center p-6">
+	<div class="w-full max-w-lg">
+		<!-- Header -->
+		<div class="text-center mb-8">
+			<div class="flex items-center justify-center mb-4">
+				<span class="text-6xl">🫐</span>
+			</div>
+			<h1 class="text-4xl font-bold text-white mb-2">ByteBerry</h1>
+			<p class="text-gray-400">Sistema de Gestión de Gastos</p>
+		</div>
+
+		<!-- Consent Card -->
+		<div class="bg-dark-100 rounded-lg border border-gray-700 shadow-xl p-8">
+			<!-- Client Info Header -->
+			<div class="text-center mb-6">
+				<div class="flex items-center justify-center mb-4">
+					<div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+						<svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"/>
+						</svg>
+					</div>
+				</div>
+				<h2 class="text-2xl font-bold text-white mb-2">
+					<%= clientName %>
+				</h2>
+				<p class="text-gray-400 text-sm">
+					solicita acceso a tu cuenta de ByteBerry
+				</p>
+			</div>
+
+			<!-- User Info -->
+			<div class="bg-dark-200 rounded-lg border border-gray-600 p-4 mb-6">
+				<div class="flex items-center">
+					<div class="w-10 h-10 bg-primary/30 rounded-full flex items-center justify-center mr-3">
+						<span class="text-white font-semibold text-sm">
+							<%= userEmail.charAt(0).toUpperCase() %>
+						</span>
+					</div>
+					<div>
+						<p class="text-white text-sm font-medium">Iniciando sesión como</p>
+						<p class="text-gray-400 text-sm"><%= userEmail %></p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Permissions Section -->
+			<div class="mb-6">
+				<h3 class="text-white font-semibold mb-3 flex items-center">
+					<svg class="w-5 h-5 text-primary mr-2" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/>
+					</svg>
+					Permisos solicitados
+				</h3>
+				<div class="space-y-2">
+					<% scopes.forEach(scope => { %>
+						<div class="flex items-start bg-dark-200 border border-gray-600 rounded-lg p-3">
+							<svg class="w-5 h-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+							<div>
+								<p class="text-white font-medium text-sm"><%= scope.name %></p>
+								<p class="text-gray-400 text-xs mt-1"><%= scope.description %></p>
+							</div>
+						</div>
+					<% }); %>
+				</div>
+			</div>
+
+			<!-- Warning Info -->
+			<div class="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4 mb-6">
+				<div class="flex items-start">
+					<svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+					</svg>
+					<div class="text-sm">
+						<p class="text-yellow-200 font-medium mb-1">Revisa cuidadosamente</p>
+						<p class="text-yellow-300/80 text-xs">
+							Solo autoriza aplicaciones en las que confíes. Esta aplicación tendrá acceso a la información especificada arriba.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Action Buttons -->
+			<form id="consentForm" method="POST" action="/auth/authorize/decision" class="space-y-3">
+				<!-- Hidden fields para preservar OAuth2 params -->
+				<input type="hidden" name="client_id" value="<%= clientId %>">
+				<input type="hidden" name="redirect_uri" value="<%= redirectUri %>">
+				<input type="hidden" name="response_type" value="<%= responseType %>">
+				<input type="hidden" name="code_challenge" value="<%= codeChallenge %>">
+				<input type="hidden" name="code_challenge_method" value="<%= codeChallengeMethod %>">
+				<% if (state) { %>
+					<input type="hidden" name="state" value="<%= state %>">
+				<% } %>
+				<% if (scope) { %>
+					<input type="hidden" name="scope" value="<%= scope %>">
+				<% } %>
+
+				<!-- Approve Button -->
+				<button type="submit" name="decision" value="approve" id="btnApprove"
+					class="w-full px-4 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-dark-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+					<span id="approveText">Autorizar Aplicación</span>
+				</button>
+
+				<!-- Deny Button -->
+				<button type="submit" name="decision" value="deny" id="btnDeny"
+					class="w-full px-4 py-3 bg-dark-200 hover:bg-gray-700 text-gray-300 font-semibold rounded-lg border border-gray-600 transition duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-dark-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+					<span id="denyText">Cancelar</span>
+				</button>
+			</form>
+
+			<!-- Privacy Info -->
+			<div class="mt-6 pt-6 border-t border-gray-700">
+				<p class="text-xs text-gray-500 text-center">
+					Puedes revocar el acceso en cualquier momento desde la configuración de tu cuenta.
+				</p>
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<div class="mt-6 text-center">
+			<p class="text-sm text-gray-500">
+				ByteBerry v<%= version %> - F2 Sky Island Saga
+			</p>
+		</div>
+	</div>
+
+	<script nonce="<%= nonce %>">
+		const form = document.getElementById('consentForm');
+		const btnApprove = document.getElementById('btnApprove');
+		const btnDeny = document.getElementById('btnDeny');
+		const approveText = document.getElementById('approveText');
+		const denyText = document.getElementById('denyText');
+
+		form.addEventListener('submit', (e) => {
+			const decision = e.submitter.value;
+
+			if (decision === 'approve') {
+				btnApprove.disabled = true;
+				btnDeny.disabled = true;
+				approveText.innerHTML = `
+					<svg class="animate-spin inline-block w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Autorizando...
+				`;
+			} else {
+				btnDeny.disabled = true;
+				btnApprove.disabled = true;
+				denyText.innerHTML = `
+					<svg class="animate-spin inline-block w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Cancelando...
+				`;
+			}
+		});
+	</script>
+</body>
+
+</html>

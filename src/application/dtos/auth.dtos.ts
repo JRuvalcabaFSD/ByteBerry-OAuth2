@@ -3,6 +3,37 @@ import { UserEntity, SessionEntity } from '@domain';
 import { ValidateRequestError } from '@shared';
 
 /**
+ * Represents the data displayed on an OAuth2 consent screen.
+ *
+ * This interface contains all the necessary information for users to review
+ * and authorize access to their resources by a client application.
+ *
+ * @interface ConsentScreenData
+ *
+ * @property {string} clientId - The unique identifier of the OAuth2 client application.
+ * @property {string} clientName - The human-readable name of the client application.
+ * @property {Array<{ name: string; description: string }>} scopes - The list of permission scopes requested by the client, each with a name and description.
+ * @property {string} redirectUri - The URI where the user will be redirected after consent.
+ * @property {string} responseType - The OAuth2 response type (e.g., "code", "token").
+ * @property {string} codeChallenge - The PKCE code challenge string for enhanced security.
+ * @property {string} codeChallengeMethod - The method used to generate the code challenge (e.g., "S256", "plain").
+ * @property {string} [state] - Optional state parameter to maintain state between the request and callback.
+ * @property {string} [scope] - Optional scope parameter as a space-separated string.
+ */
+
+export interface ConsentScreenData {
+	clientId: string;
+	clientName: string;
+	scopes: Array<{ name: string; description: string }>;
+	redirectUri: string;
+	responseType: string;
+	codeChallenge: string;
+	codeChallengeMethod: string;
+	state?: string;
+	scope?: string;
+}
+
+/**
  * Data Transfer Object for OAuth 2.0 authorization code requests with PKCE support.
  *
  * This DTO encapsulates the parameters required for initiating an OAuth 2.0 authorization
@@ -425,6 +456,74 @@ export class TokenResponseDTO {
 			token_type: this.tokenType,
 			expires_in: this.expiresIn,
 			scope: this.scope,
+		};
+	}
+}
+
+/**
+ * Data Transfer Object for displaying OAuth2 scope information.
+ * Provides scope names and their localized descriptions for UI presentation.
+ *
+ * @class ScopeDisplayDTO
+ * @example
+ * const scopes = ScopeDisplayDTO.fromScopeNames(['read', 'write']);
+ * scopes.forEach(scope => console.log(scope.name, scope.description));
+ */
+
+export class ScopeDisplayDTO {
+	public readonly name!: string;
+	public readonly description!: string;
+
+	private constructor(data: { name: string; description: string }) {
+		Object.assign(this, data);
+	}
+
+	/**
+	 * Converts an array of scope names into an array of ScopeDisplayDTO objects with descriptions.
+	 *
+	 * @param scopeNames - An array of scope name strings to be converted
+	 * @returns An array of ScopeDisplayDTO objects, each containing a scope name and its corresponding description
+	 *
+	 * @description
+	 * Maps each scope name to a ScopeDisplayDTO with a human-readable description in Spanish.
+	 * If a scope name is not found in the predefined descriptions, a generic description is generated.
+	 *
+	 * Supported scopes:
+	 * - `read` - View expense, category, and report information
+	 * - `write` - Create, edit, and delete expenses and categories
+	 * - `admin` - Full access to all administration functions
+	 * - `profile` - View user profile information
+	 * - `profile:write` - Modify user profile information
+	 *
+	 * @example
+	 * const scopes = ScopeDisplayDTO.fromScopeNames(['read', 'write']);
+	 * // Returns an array with descriptions for each scope
+	 */
+
+	public static fromScopeNames(scopeNames: string[]): ScopeDisplayDTO[] {
+		const scopeDescriptions: Record<string, string> = {
+			read: 'Ver tu información de gastos, categorías y reportes',
+			write: 'Crear, editar y eliminar gastos y categorías',
+			admin: 'Acceso completo a todas las funciones de administración',
+			profile: 'Ver tu información de perfil de usuario',
+			'profile:write': 'Modificar tu información de perfil',
+		};
+
+		return scopeNames.map((scopeName) => {
+			const description = scopeDescriptions[scopeName] || `Acceso al scope: ${scopeName}`;
+			return new ScopeDisplayDTO({ name: scopeName, description });
+		});
+	}
+
+	/**
+	 * Converts the current instance to a plain object representation.
+	 * @returns An object containing the name and description properties.
+	 */
+
+	public toObject(): { name: string; description: string } {
+		return {
+			name: this.name,
+			description: this.description,
 		};
 	}
 }
