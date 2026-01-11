@@ -38,6 +38,8 @@ CREATE TABLE "oauth_clients" (
     "grantTypes" TEXT[],
     "isPublic" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "client_secret_old" TEXT,
+    "secret_expires_at" TIMESTAMP(3),
     "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -67,12 +69,12 @@ CREATE TABLE "authorization_codes" (
 -- CreateTable
 CREATE TABLE "user_consents" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "clientId" TEXT NOT NULL,
-    "scopes" TEXT[],
-    "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3),
-    "revokedAt" TIMESTAMP(3),
+    "user_id" TEXT NOT NULL,
+    "client_id" TEXT NOT NULL,
+    "scopes" VARCHAR(50)[],
+    "granted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMP(3),
+    "revoked_at" TIMESTAMP(3),
 
     CONSTRAINT "user_consents_pkey" PRIMARY KEY ("id")
 );
@@ -131,16 +133,13 @@ CREATE INDEX "authorization_codes_clientId_idx" ON "authorization_codes"("client
 CREATE INDEX "authorization_codes_expiresAt_idx" ON "authorization_codes"("expiresAt");
 
 -- CreateIndex
-CREATE INDEX "user_consents_userId_idx" ON "user_consents"("userId");
+CREATE INDEX "user_consents_user_id_idx" ON "user_consents"("user_id");
 
 -- CreateIndex
-CREATE INDEX "user_consents_clientId_idx" ON "user_consents"("clientId");
+CREATE INDEX "user_consents_client_id_idx" ON "user_consents"("client_id");
 
 -- CreateIndex
-CREATE INDEX "user_consents_revokedAt_idx" ON "user_consents"("revokedAt");
-
--- CreateIndex
-CREATE UNIQUE INDEX "user_consents_userId_clientId_key" ON "user_consents"("userId", "clientId");
+CREATE INDEX "user_consents_revoked_at_idx" ON "user_consents"("revoked_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "scope_definitions_name_key" ON "scope_definitions"("name");
@@ -161,7 +160,14 @@ ALTER TABLE "authorization_codes" ADD CONSTRAINT "authorization_codes_userId_fke
 ALTER TABLE "authorization_codes" ADD CONSTRAINT "authorization_codes_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "oauth_clients"("clientId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_consents" ADD CONSTRAINT "user_consents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_consents" ADD CONSTRAINT "user_consents_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_consents" ADD CONSTRAINT "user_consents_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "oauth_clients"("clientId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_consents" ADD CONSTRAINT "user_consents_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "oauth_clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- CreatePartialUniqueIndex
+-- Partial unique index: only one active consent per (user_id, client_id)
+-- This allows multiple revoked consents but only one active consent
+CREATE UNIQUE INDEX "unique_active_consent"
+ON "user_consents" ("user_id", "client_id")
+WHERE "revoked_at" IS NULL;

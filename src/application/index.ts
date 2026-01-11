@@ -22,6 +22,7 @@ export * from './use-cases/client/validate-client.use-case.js';
 export * from './use-cases/consent/process-consent.use-case.js';
 export * from './use-cases/consent/show-consent.use-case.js';
 export * from './use-cases/consent/list-consent.use-case.js';
+export * from './use-cases/consent/delete-consent.use-case.js';
 export * from './use-cases/user/get-user.use-case.js';
 export * from './use-cases/user/register-user.use-case.js';
 export * from './use-cases/user/update-password.use-case.js';

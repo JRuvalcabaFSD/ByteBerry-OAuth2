@@ -46,4 +46,12 @@ export interface IConsentRepository {
 	 */
 
 	revokeConsent(consentId: string): Promise<void>;
+
+	/**
+	 * Finds a consent record by its ID.
+	 * @param consentId - The unique identifier of the consent
+	 * @returns A promise that resolves to the consent entity if found, otherwise null
+	 */
+
+	findById(consentId: string): Promise<ConsentEntity | null>;
 }

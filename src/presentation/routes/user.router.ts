@@ -9,5 +9,6 @@ export function createUserRoutes(controller: UserController, requireSession: Req
 	router.get('/me', requireSession, controller.getMe);
 	router.put('/me/password', requireSession, controller.updatePassword);
 	router.get('/me/consents', requireSession, controller.listConsents);
+	router.delete('/me/consents/:id', requireSession, controller.revokeConsent);
 	return router;
 }

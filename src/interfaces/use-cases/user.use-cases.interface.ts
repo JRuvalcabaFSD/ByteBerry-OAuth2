@@ -7,6 +7,7 @@ declare module '@ServiceMap' {
 		GetUserUseCase: IGetUserUseCase;
 		UpdateUserUseCase: IUpdateUserUseCase;
 		UpdatePasswordUseCase: IUpdatePasswordUseCase;
+		DeleteConsentUseCase: IDeleteConsentUseCase;
 	}
 }
 
@@ -75,4 +76,19 @@ export interface IUpdateUserUseCase {
 
 export interface IUpdatePasswordUseCase {
 	execute(userId: string, request: Dtos.UpdatePasswordRequestDTO): Promise<Dtos.UpdatePasswordResponseDTO>;
+}
+
+/**
+ * Use case interface for deleting a user's consent.
+ *
+ * @interface IDeleteConsentUseCase
+ * @method execute - Deletes a specific consent record for a user
+ * @param {string} userId - The unique identifier of the user
+ * @param {string} consentId - The unique identifier of the consent to be deleted
+ * @returns {Promise<void>} A promise that resolves when the consent has been successfully deleted
+ * @throws {Error} May throw an error if the user or consent is not found, or if the deletion fails
+ */
+
+export interface IDeleteConsentUseCase {
+	execute(userId: string, consentId: string): Promise<void>;
 }

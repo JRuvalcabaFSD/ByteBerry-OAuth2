@@ -132,9 +132,11 @@ export class AppRouter {
 
 	private getRoutesList(baseUrl: string): Record<string, unknown> | string[] {
 		const routes = [
+			//Home and health
 			{ name: 'home', value: `${baseUrl}/`, method: 'GET' },
 			{ name: 'deepHealth', value: `${baseUrl}/health/deep`, method: 'GET' },
 			{ name: 'health', value: `${baseUrl}/health`, method: 'GET' },
+			// OAuth and Authorized
 			{ name: 'authorize', value: `${baseUrl}/auth/authorize`, method: 'GET' },
 			{ name: 'JWKS', value: `${baseUrl}/auth/.well-known/jwks.json`, method: 'GET' },
 			{ name: 'showLoginForm', value: `${baseUrl}/auth/login`, method: 'POST' },
@@ -142,11 +144,13 @@ export class AppRouter {
 			{ name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
 			{ name: 'showConsentForm', value: `${baseUrl}/auth/authorize/consent`, method: 'GET' },
 			{ name: 'consentProcess', value: `${baseUrl}/auth/authorize/decision`, method: 'PUT' },
+			// User
 			{ name: 'user', value: `${baseUrl}/user/`, method: 'POST' },
 			{ name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
 			{ name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
 			{ name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
 			{ name: 'listConsents', value: `${baseUrl}/user/me/consents`, method: 'PUT' },
+			// Client
 			{ name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
 			{ name: 'listClients', value: `${baseUrl}/client`, method: 'GET' },
 			{ name: 'getClient', value: `${baseUrl}/client/:id`, method: 'GET' },

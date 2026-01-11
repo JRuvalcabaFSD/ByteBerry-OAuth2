@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { Injectable } from '@shared';
 import { RegisterUserRequestDTO, UpdatePasswordRequestDTO, UpdateUserRequestDTO } from '@application';
-import type { IGetUserUseCase, IListClientUseCase, IRegisterUserUseCase, IUpdatePasswordUseCase, IUpdateUserUseCase } from '@interfaces';
+import type * as UseCases from '@interfaces';
 
 //TODO documentar
 declare module '@ServiceMap' {
@@ -41,15 +41,23 @@ declare module '@ServiceMap' {
 
 @Injectable({
 	name: 'UserController',
-	depends: ['RegisterUserUseCase', 'GetUserUseCase', 'UpdateUserUseCase', 'UpdatePasswordUseCase', 'ListConsentsUseCase'],
+	depends: [
+		'RegisterUserUseCase',
+		'GetUserUseCase',
+		'UpdateUserUseCase',
+		'UpdatePasswordUseCase',
+		'ListConsentsUseCase',
+		'DeleteConsentUseCase',
+	],
 })
 export class UserController {
 	constructor(
-		private readonly registerUseCase: IRegisterUserUseCase,
-		private readonly getUseCase: IGetUserUseCase,
-		private readonly updateUserUseCase: IUpdateUserUseCase,
-		private readonly updatePasswordUseCase: IUpdatePasswordUseCase,
-		private readonly listConsentUseCase: IListClientUseCase
+		private readonly registerUseCase: UseCases.IRegisterUserUseCase,
+		private readonly getUseCase: UseCases.IGetUserUseCase,
+		private readonly updateUserUseCase: UseCases.IUpdateUserUseCase,
+		private readonly updatePasswordUseCase: UseCases.IUpdatePasswordUseCase,
+		private readonly listConsentUseCase: UseCases.IListClientUseCase,
+		private readonly deleteConsentUseCase: UseCases.IDeleteClientUseCase
 	) {}
 
 	/**
@@ -168,6 +176,29 @@ export class UserController {
 			const response = await this.listConsentUseCase.execute(userId);
 
 			res.status(200).json(response.toJSON());
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	/**
+	 * Revokes a user's consent for an OAuth2 application.
+	 *
+	 * @param req - Express request object containing the authenticated user and consent ID in params
+	 * @param res - Express response object
+	 * @param next - Express next middleware function for error handling
+	 * @returns Promise that resolves to void
+	 * @throws Passes errors to the error handling middleware via next()
+	 */
+
+	public revokeConsent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user!.userId;
+			const consentId = req.params.id;
+
+			await this.deleteConsentUseCase.execute(userId, consentId);
+
+			res.status(204).send();
 		} catch (error) {
 			next(error);
 		}
