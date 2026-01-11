@@ -6,7 +6,7 @@ export default mergeConfig(
 	defineConfig({
 		test: {
 			include: ['tests/unit/**/*.test.ts'],
-			fileParallelism: false,
+			fileParallelism: true,
 			sequence: {
 				concurrent: false,
 				shuffle: false,

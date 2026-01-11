@@ -5,7 +5,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'node',
-		silent: true,
+		silent: false,
 
 		// Cobertura - deshabilitada por defecto para desarrollo
 		coverage: {
