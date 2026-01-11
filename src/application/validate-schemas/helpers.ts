@@ -74,7 +74,7 @@ export const urlsArray = (field: string) => {
 			url({ hostname: /^(localhost|127\.0\.0\.1|.*)$/, protocol: /^https?$/, error: 'Invalid redirect URI Must be HTTPS or localhost' })
 		),
 		`${field} must be an array`
-	);
+	).min(1, `${field} cannot be empty`);
 };
 
 export const grantTypesArray = (field: string) => {

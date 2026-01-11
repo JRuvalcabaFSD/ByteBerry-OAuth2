@@ -10,6 +10,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { execSync } from 'child_process';
 
 /**
  * Singleton instance - UNA SOLA para todos los tests
@@ -47,6 +48,19 @@ export async function getPrismaTestClient(): Promise<PrismaClient> {
 		});
 
 		await prismaInstance.$connect();
+
+		// Ejecutar migraciones
+		try {
+			const env = { ...process.env, DATABASE_URL: databaseUrl };
+			execSync('npx prisma migrate deploy', {
+				stdio: 'pipe',
+				env,
+			});
+			console.log('✅ Migraciones ejecutadas correctamente');
+		} catch (error) {
+			console.warn('⚠️  Error al ejecutar migraciones:', error);
+		}
+
 		console.log('✅ PrismaClient singleton creado para tests');
 	}
 

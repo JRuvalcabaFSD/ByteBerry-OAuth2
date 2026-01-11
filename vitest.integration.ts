@@ -18,6 +18,10 @@ export default mergeConfig(
 			env: {
 				NODE_ENV: 'test',
 			},
+			dotenv: {
+				envDir: process.cwd(),
+				testEnvFile: '.env.test',
+			},
 		},
 	})
 );

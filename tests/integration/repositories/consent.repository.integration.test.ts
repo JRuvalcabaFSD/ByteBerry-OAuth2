@@ -11,9 +11,9 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 
-import { getPrismaTestClient, closePrismaTestClient } from '../helpers/prisma-test-client.js';
-import { cleanDatabase, seedTestDatabase } from '../helpers/database-helper.js';
-import { generateTestEmail, generateTestUsername } from '../helpers/fixtures-helper.js';
+import { getPrismaTestClient, closePrismaTestClient } from '../../helpers/prisma-test-client.js';
+import { cleanDatabase, seedTestDatabase } from '../../helpers/database-helper.js';
+import { generateTestEmail, generateTestUsername } from '../../helpers/fixtures-helper.js';
 
 import { ConsentEntity } from '@domain';
 import type { ILogger } from '@interfaces';

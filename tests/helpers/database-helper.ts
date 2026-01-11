@@ -157,3 +157,82 @@ export async function isDatabaseEmpty(prisma: PrismaClient): Promise<boolean> {
 
 	return counts.every((count) => count === 0);
 }
+
+/**
+ * Siembra solo el usuario y scopes (sin cliente OAuth)
+ * Útil para tests de clientes donde se necesita una DB limpia de clientes
+ */
+export async function seedTestDatabaseUserOnly(
+	prisma: PrismaClient
+): Promise<{
+	testUser: {
+		id: string;
+		email: string;
+		username: string;
+		passwordHash: string;
+		passwordPlain: string;
+	};
+	scopes: Array<{
+		id: string;
+		name: string;
+		description: string;
+		isDefault: boolean;
+	}>;
+}> {
+	// Usuario de prueba
+	const passwordPlain = 'Test123!@#';
+	const passwordHash = await bcrypt.hash(passwordPlain, 10);
+
+	const testUser = await prisma.user.create({
+		data: {
+			email: 'test@byteberry.test',
+			username: 'testuser',
+			passwordHash,
+			fullName: 'Test User',
+			roles: ['user'],
+			isActive: true,
+			emailVerified: true,
+		},
+	});
+
+	// Scopes
+	const scopeDefinitions = await Promise.all([
+		prisma.scopeDefinition.create({
+			data: {
+				name: 'read',
+				description: 'Read access',
+				isDefault: true,
+			},
+		}),
+		prisma.scopeDefinition.create({
+			data: {
+				name: 'write',
+				description: 'Write access',
+				isDefault: false,
+			},
+		}),
+		prisma.scopeDefinition.create({
+			data: {
+				name: 'admin',
+				description: 'Admin access',
+				isDefault: false,
+			},
+		}),
+	]);
+
+	return {
+		testUser: {
+			id: testUser.id,
+			email: testUser.email,
+			username: testUser.username!,
+			passwordHash,
+			passwordPlain,
+		},
+		scopes: scopeDefinitions.map((s) => ({
+			id: s.id,
+			name: s.name,
+			description: s.description,
+			isDefault: s.isDefault,
+		})),
+	};
+}

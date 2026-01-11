@@ -5,11 +5,18 @@
 
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Load environment variables from .env.test immediately
-dotenv.config({
-	path: path.resolve(process.cwd(), '.env.test'),
-});
+const envTestPath = path.resolve(process.cwd(), '.env.test');
+if (fs.existsSync(envTestPath)) {
+	dotenv.config({
+		path: envTestPath,
+	});
+} else {
+	// Fallback if .env.test doesn't exist
+	console.warn(`⚠️ .env.test not found at ${envTestPath}`);
+}
 
 // Configure environment for testing
 process.env.NODE_ENV = 'test';

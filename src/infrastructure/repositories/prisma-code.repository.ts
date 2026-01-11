@@ -55,6 +55,7 @@ export class CodeRepository implements ICodeRepository {
 				where: { code: code.code },
 				update: {
 					used: code.isUsed(),
+					usedAt: code.isUsed() ? now : null,
 					expiresAt: code.expiresAt,
 				},
 				create: {

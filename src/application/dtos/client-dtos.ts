@@ -260,11 +260,12 @@ export class ClientResponseDTO {
 	/**
 	 * Converts a ClientEntity to a ClientResponseDTO.
 	 * @param client - The ClientEntity instance to convert.
-	 * @returns A new ClientResponseDTO containing the client data.
+	 * @returns A new ClientResponseDTO containing the client data without the secret.
 	 */
 
 	public static fromEntity(client: ClientEntity): ClientResponseDTO {
-		return new ClientResponseDTO({ client: { ...client } });
+		const { clientSecret, ...clientData } = client;
+		return new ClientResponseDTO({ client: clientData as Client });
 	}
 
 	/**

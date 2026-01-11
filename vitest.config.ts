@@ -5,7 +5,8 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'node',
-		silent: false,
+		silent: true,
+		setupFiles: ['./tests/setup/setup.ts'],
 
 		// Cobertura - deshabilitada por defecto para desarrollo
 		coverage: {
