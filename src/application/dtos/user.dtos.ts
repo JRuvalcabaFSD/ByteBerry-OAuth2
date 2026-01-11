@@ -198,7 +198,7 @@ export class RegisterUserRequestDTO {
 	 */
 
 	public static fromBody(body: Record<string, string>, ip?: string): RegisterUserRequestDTO {
-		const resp = UserRegisterSchema.safeParse({ ...body, ip });
+		const resp = UserRegisterSchema.safeParse({ ...body, ipAddress: ip });
 
 		if (!resp.success) {
 			const formatted = formattedZodError(resp.error, 'form');

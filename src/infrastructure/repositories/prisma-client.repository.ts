@@ -1,10 +1,10 @@
-import { ClientEntity } from '@domain';
-import { DBConfig } from '@config';
 import { PrismaClient } from '@prisma/client';
+
+import { DBConfig } from '@config';
+import { ClientEntity } from '@domain';
 import { clientMapper } from '@infrastructure';
 import type { IClientRepository, ILogger } from '@interfaces';
 import { getErrMessage, handledPrismaError, Injectable, LogContextClass, LogContextMethod } from '@shared';
-import { RotateSecretData } from '@application';
 
 /**
  * Repository for managing OAuth client entities using Prisma ORM.
