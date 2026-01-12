@@ -34,3 +34,4 @@ export * from './services/key-loader.service.js';
 export * from './services/jwt.service.js';
 export * from './services/hash.service.js';
 export * from './services/jwks.service.js';
+export * from './services/db-health.service.js';

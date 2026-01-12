@@ -78,7 +78,6 @@ export interface HealthResponse {
  * @property tables.users - Whether the 'users' table is accessible.
  * @property tables.oAuthClients - Whether the 'oAuthClients' table is accessible.
  * @property tables.authCodes - Whether the 'authCodes' table is accessible.
- * @property tables.refreshTokens - Whether the 'refreshTokens' table is accessible.
  * @property recordCounts - (Optional) The number of records in each key table.
  * @property recordCounts.users - The number of records in the 'users' table.
  * @property recordCounts.oAuthClients - The number of records in the 'oAuthClients' table.
@@ -94,13 +93,11 @@ export interface DatabaseHealthResponse {
 		users: boolean;
 		oAuthClients: boolean;
 		authCodes: boolean;
-		refreshTokens: boolean;
 	};
 	recordCounts?: {
 		users: number;
 		oAuthClients: number;
 		authCodes: number;
-		refreshTokens: number;
 	};
 	error?: string;
 }
