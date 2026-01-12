@@ -21,7 +21,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22.21.1"
-  DATABASE_URL: "postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public"
+  DATABASE_URL: "postgres://postgres:postgres@localhost:5433/byteberry_oauth2_test?schema=public"
 
 jobs:
   setup:
@@ -272,15 +272,15 @@ jobs:
       - name: 🗄️ Start PostgreSQL for smoke test
         run: |
           docker run -d --name test-postgres \
-            -e POSTGRES_USER=test_user \
-            -e POSTGRES_PASSWORD=test_password \
-            -e POSTGRES_DB=oauth2_test \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=byteberry_oauth2_test \
             -p 5433:5432 \
             postgres:16-alpine
 
           echo "⏳ Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
-            if docker exec test-postgres pg_isready -U test_user -d oauth2_test > /dev/null 2>&1; then
+            if docker exec test-postgres pg_isready -U postgres -d byteberry_oauth2_test > /dev/null 2>&1; then
               echo "✅ PostgreSQL is ready"
               break
             fi
