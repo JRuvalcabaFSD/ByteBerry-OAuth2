@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
-import type { IDatabaseHealthChecker, IDatabaseHealthResponse, ILogger } from '@interfaces';
-import { Injectable, LogContextClass, LogContextMethod } from '@shared';
 import { DBConfig } from '@config';
+import { Injectable, LogContextClass, LogContextMethod } from '@shared';
+import type { IDatabaseHealthChecker, IDatabaseHealthResponse, ILogger } from '@interfaces';
 
 /**
  * Service for checking the health and status of the database connection.

@@ -78,9 +78,8 @@ jobs:
       - name: 🔍 Run ESLint
         run: pnpm lint
 
-      # TODO F2
-      # - name: Generate Prisma Client
-      #   run: pnpm prisma generate
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
 
       - name: 📏 Check TypeScript types
         run: pnpm type-check
@@ -117,9 +116,8 @@ jobs:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      # TODO F2
-      # - name: Generate Prisma Client
-      #   run: pnpm prisma generate
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
 
       - name: 🏗️ Build TypeScript
         run: pnpm build
@@ -175,15 +173,13 @@ jobs:
       - name: Generate JWT test keys
         run: pnpm generate:keys
 
-      # TODO F2
-      # - name: Generate Prisma Client
-      #   run: pnpm prisma generate
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
 
-      # TODO F2
-      # - name: Set up Docker Compose
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y docker-compose
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
       - name: 🧪 Run unit tests with coverage
         run: |
@@ -281,25 +277,24 @@ jobs:
           echo "🏗️ Building Docker image for PR verification..."
           docker build -t byteberry-oauth2:pr-${{ github.event.pull_request.number }} .
 
-      # F2
-      # - name: 🗄️ Start PostgreSQL for smoke test
-      #   run: |
-      #     docker run -d --name test-postgres \
-      #       -e POSTGRES_USER=test_user \
-      #       -e POSTGRES_PASSWORD=test_password \
-      #       -e POSTGRES_DB=oauth2_test \
-      #       -p 5433:5432 \
-      #       postgres:16-alpine
+      - name: 🗄️ Start PostgreSQL for smoke test
+        run: |
+          docker run -d --name test-postgres \
+            -e POSTGRES_USER=test_user \
+            -e POSTGRES_PASSWORD=test_password \
+            -e POSTGRES_DB=oauth2_test \
+            -p 5433:5432 \
+            postgres:16-alpine
 
-      #     echo "⏳ Waiting for PostgreSQL to be ready..."
-      #     for i in {1..30}; do
-      #       if docker exec test-postgres pg_isready -U test_user -d oauth2_test > /dev/null 2>&1; then
-      #         echo "✅ PostgreSQL is ready"
-      #         break
-      #       fi
-      #       echo "Attempt $i/30: PostgreSQL not ready yet..."
-      #       sleep 2
-      #     done
+          echo "⏳ Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if docker exec test-postgres pg_isready -U test_user -d oauth2_test > /dev/null 2>&1; then
+              echo "✅ PostgreSQL is ready"
+              break
+            fi
+            echo "Attempt $i/30: PostgreSQL not ready yet..."
+            sleep 2
+          done
 
       - name: 🧪 Smoke test Docker image
         run: |
