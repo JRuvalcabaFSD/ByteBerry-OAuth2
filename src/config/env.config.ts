@@ -30,6 +30,11 @@ export class Config implements IConfig {
 	readonly corsOrigins: string[];
 	readonly bcryptRounds: number;
 
+	//Database environments
+	readonly databaseUrl: string;
+	readonly databasePoolMin: number;
+	readonly databasePoolMax: number;
+
 	constructor() {
 		try {
 			// ========================================
@@ -67,6 +72,13 @@ export class Config implements IConfig {
 				env.get('CORS_ORIGINS').default('http://localhost:5173,http://localhost:4003,http://localhost:4000').asArray(',')
 			);
 			this.bcryptRounds = env.get('BCRYPT_ROUNDS').default('12').asIntPositive();
+
+			// ========================================
+			// Database environments
+			// ========================================
+			this.databaseUrl = env.get('DATABASE_URL').required().asString();
+			this.databasePoolMax = env.get('DATABASE_POOL_MIN').default('2').asIntPositive();
+			this.databasePoolMin = env.get('DATABASE_POOL_MAX').default('10').asIntPositive();
 		} catch (error) {
 			throw new ConfigError(`Failed to validate environment variables ${getErrMessage(error)}}`, this.generateContext());
 		}

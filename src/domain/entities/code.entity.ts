@@ -19,8 +19,8 @@ interface CodeData {
 	redirectUri: string;
 	codeChallenge: CodeChallengeVO;
 	expiresAt: Date;
-	scope?: string | undefined;
-	state?: string | undefined;
+	scope?: string | null;
+	state?: string | null;
 }
 
 /**
@@ -29,11 +29,12 @@ interface CodeData {
  * Extends all properties from `AutCodeData` except `expiresAt`, and adds an optional
  * `expirationMinutes` property to specify the code's validity period in minutes.
  *
- * @property {number | undefined} [expirationMinutes] - Optional. The number of minutes until the auth code expires.
+ * @property {number | null} [expirationMinutes] - Optional. The number of minutes until the auth code expires.
  */
 
 interface CodeParams extends Omit<CodeData, 'expiresAt'> {
-	expirationMinutes?: number | undefined;
+	expiresAt?: Date;
+	expirationMinutes?: number | null;
 }
 
 /**
@@ -54,8 +55,8 @@ interface CodeParams extends Omit<CodeData, 'expiresAt'> {
  * @property {string} redirectUri - The redirect URI associated with the code.
  * @property {CodeChallengeVO} codeChallenge - The PKCE code challenge value.
  * @property {Date} expiresAt - The expiration date and time of the code.
- * @property {string | undefined} [scope] - The optional scope of the authorization.
- * @property {string | undefined} [state] - The optional state parameter for CSRF protection.
+ * @property {string | null} [scope] - The optional scope of the authorization.
+ * @property {string | null} [state] - The optional state parameter for CSRF protection.
  *
  * @method isUsed - Returns whether the code has already been used.
  * @method isExpired - Returns whether the code has expired.
@@ -72,8 +73,8 @@ export class CodeEntity {
 	public readonly redirectUri!: string;
 	public readonly codeChallenge!: CodeChallengeVO;
 	public readonly expiresAt!: Date;
-	public readonly scope?: string | undefined;
-	public readonly state?: string | undefined;
+	public readonly scope?: string | null;
+	public readonly state?: string | null;
 
 	/**
 	 * Creates a new instance of the class using the provided authentication code data.
@@ -96,8 +97,13 @@ export class CodeEntity {
 	 */
 
 	public static create(params: CodeParams): CodeEntity {
-		const expiresAt = new Date();
-		expiresAt.setMinutes(expiresAt.getMinutes() + (params.expirationMinutes || 1));
+		let expiresAt: Date;
+		if (params.expiresAt) {
+			expiresAt = params.expiresAt;
+		} else {
+			expiresAt = new Date();
+			expiresAt.setMinutes(expiresAt.getMinutes() + (params.expirationMinutes || 1));
+		}
 
 		return new CodeEntity({ ...params, expiresAt });
 	}

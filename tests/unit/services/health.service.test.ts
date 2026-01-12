@@ -38,6 +38,7 @@ describe('HealthService', () => {
 	let mockLogger: Interfaces.ILogger;
 	let mockHealthRegistry: Interfaces.IHealthRegistry;
 	let mockJwksService: Interfaces.IJwksService;
+	let mockDbHealthChecker: Interfaces.IDatabaseHealthChecker;
 
 	beforeEach(() => {
 		mockConfig = {
@@ -78,7 +79,20 @@ describe('HealthService', () => {
 			})),
 		} as unknown as Interfaces.IJwksService;
 
-		healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+		mockDbHealthChecker = {
+			getHealthStatus: vi.fn(() => Promise.resolve({
+				connected: true,
+				latency: 10,
+				tables: {
+					users: true,
+					oAuthClients: true,
+					authCodes: true,
+					refreshTokens: true,
+				},
+			})),
+		} as unknown as Interfaces.IDatabaseHealthChecker;
+
+		healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 	});
 
 	describe('getHealth', () => {
@@ -90,7 +104,7 @@ describe('HealthService', () => {
 					{ checkHealth: vi.fn(() => Promise.resolve({ status: 'healthy', message: 'OK' })) }
 				]) as [keyof ServiceMap, HealthCheckable][]
 			));
-			const mockReq = { requestId: 'req-123' } as Request;
+			const mockReq = { requestId: 'req-123' } as unknown as Request;
 			const mockRes = {
 				status: vi.fn().mockReturnThis(),
 				json: vi.fn(),
@@ -146,7 +160,7 @@ describe('HealthService', () => {
 			mockHealthRegistry.getCheckers = vi.fn(() => new Map([
 				['Config', { checkHealth: vi.fn(() => Promise.resolve({ status: 'healthy', message: 'OK' })) }],
 			] as [keyof ServiceMap, HealthCheckable][]));
-			const mockReq = { requestId: 'req-123' } as Request;
+			const mockReq = { requestId: 'req-123' } as unknown as Request;
 			const mockRes = {
 				status: vi.fn().mockReturnThis(),
 				json: vi.fn(),
@@ -248,8 +262,9 @@ describe('HealthService', () => {
 			const dependencies = {
 				service1: { status: 'unhealthy' } as Interfaces.DependencyResponse,
 			};
+			const databaseHealth = { connected: true, latency: 10, tables: {} } as any;
 
-			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks, databaseHealth);
 
 			expect(result).toBe('unhealthy');
 		});
@@ -258,8 +273,9 @@ describe('HealthService', () => {
 			const dependencies = {
 				service1: { status: 'healthy' } as Interfaces.DependencyResponse,
 			};
+			const databaseHealth = { connected: true, latency: 10, tables: {} } as any;
 
-			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks, databaseHealth);
 
 			expect(result).toBe('healthy');
 		});
@@ -268,8 +284,9 @@ describe('HealthService', () => {
 			const dependencies = {
 				service1: { status: 'healthy' } as Interfaces.DependencyResponse,
 			};
+			const databaseHealth = { connected: true, latency: 10, tables: {} } as any;
 
-			const result = (healthService as any).determineOverallStatus(dependencies, unhealthyJwks);
+			const result = (healthService as any).determineOverallStatus(dependencies, unhealthyJwks, databaseHealth);
 
 			expect(result).toBe('unhealthy');
 		});
@@ -278,8 +295,9 @@ describe('HealthService', () => {
 			const dependencies = {
 				service1: { status: 'degraded' } as unknown as Interfaces.DependencyResponse,
 			};
+			const databaseHealth = { connected: true, latency: 10, tables: {} } as any;
 
-			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks);
+			const result = (healthService as any).determineOverallStatus(dependencies, healthyJwks, databaseHealth);
 
 			expect(result).toBe('degraded');
 		});
@@ -306,7 +324,7 @@ describe('HealthService', () => {
 
 		it('should handle fallback on config error', async () => {
 			const brokenConfig = { ...mockConfig, serviceName: undefined } as unknown as typeof mockConfig;
-			healthService = new HealthService(brokenConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(brokenConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService,mockDbHealthChecker);
 
 			const mockReq = {} as Request;
 			const mockRes = {
@@ -342,7 +360,7 @@ describe('HealthService', () => {
 		});
 
 		it('should return unhealthy when JWKS service is not available', async () => {
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, null as any);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, null as any, mockDbHealthChecker);
 			const result = await (healthService as any).checkJwksAvailability();
 
 			expect(result).toEqual(
@@ -356,7 +374,7 @@ describe('HealthService', () => {
 
 		it('should return unhealthy when JWKS returns invalid structure', async () => {
 			mockJwksService.getJwks = vi.fn(() => Promise.resolve({ keys: null as any }));
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 
 			const result = await (healthService as any).checkJwksAvailability();
 
@@ -371,7 +389,7 @@ describe('HealthService', () => {
 
 		it('should return unhealthy when JWKS returns empty key set', async () => {
 			mockJwksService.getJwks = vi.fn(() => Promise.resolve({ keys: [] }));
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 
 			const result = await (healthService as any).checkJwksAvailability();
 
@@ -394,7 +412,7 @@ describe('HealthService', () => {
 					} as any,
 				],
 			} as Interfaces.JwksResponse));
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 
 			const result = await (healthService as any).checkJwksAvailability();
 
@@ -420,7 +438,7 @@ describe('HealthService', () => {
 					} as any,
 				],
 			} as Interfaces.JwksResponse));
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 
 			const result = await (healthService as any).checkJwksAvailability();
 
@@ -435,7 +453,7 @@ describe('HealthService', () => {
 
 		it('should handle errors during JWKS check', async () => {
 			mockJwksService.getJwks = vi.fn(() => Promise.reject(new Error('JWKS service error')));
-			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService);
+			healthService = new HealthService(mockConfig, mockUuid, mockClock, mockLogger, mockHealthRegistry, mockJwksService, mockDbHealthChecker);
 
 			const result = await (healthService as any).checkJwksAvailability();
 

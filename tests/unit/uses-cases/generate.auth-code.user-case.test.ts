@@ -9,6 +9,7 @@ describe('GenerateAuthCodeUseCase', () => {
 	let mockValidateClient: IValidateClientUseCase;
 	let mockLogger: ILogger;
 	let mockConfig: IConfig;
+	let mockCheckConsent: any;
 
 	beforeEach(() => {
 		mockRepository = {
@@ -26,13 +27,18 @@ describe('GenerateAuthCodeUseCase', () => {
 		mockLogger = {
 			debug: vi.fn(),
 			error: vi.fn(),
+			info: vi.fn(),
 		} as unknown as ILogger;
 
 		mockConfig = {
 			oauth2AuthCodeExpiresIn: 10,
 		} as unknown as IConfig;
 
-		useCase = new GenerateAuthCodeUseCase(mockRepository, mockValidateClient, mockLogger, mockConfig);
+		mockCheckConsent = {
+			execute: vi.fn().mockResolvedValue(true),
+		} as any;
+
+		useCase = new GenerateAuthCodeUseCase(mockRepository, mockValidateClient, mockCheckConsent, mockLogger, mockConfig);
 	});
 
 	it('should generate authorization code successfully', async () => {
@@ -56,6 +62,7 @@ describe('GenerateAuthCodeUseCase', () => {
 			redirectUri: 'https://example.com/callback',
 			grantType: 'authorization_code',
 		});
+		expect(mockCheckConsent.execute).toHaveBeenCalledWith('user-123', 'test-client-id', []);
 		expect(mockRepository.save).toHaveBeenCalled();
 	});
 
@@ -68,11 +75,31 @@ describe('GenerateAuthCodeUseCase', () => {
 		const useCaseWithDefault = new GenerateAuthCodeUseCase(
 			mockRepository,
 			mockValidateClient,
+			mockCheckConsent,
 			mockLogger,
 			configWithoutExpiration
 		);
 
 		expect(useCaseWithDefault['expirationMinutes']).toBe(1);
+	});
+
+	it('should throw ConsentRequiredError when user has no consent', async () => {
+		const userId = 'user-123';
+		const request: CodeRequestDTO = {
+			clientId: 'test-client-id',
+			redirectUri: 'https://example.com/callback',
+			responseType: 'code',
+			codeChallenge: 'E9Mrozoa2owUedPyTP5_ryO5ZVut4gQstEUMi2DrNEA',
+			codeChallengeMethod: 'S256',
+			state: 'state',
+			scope: 'openid profile',
+		};
+
+		vi.mocked(mockCheckConsent.execute).mockResolvedValueOnce(false);
+
+		const { ConsentRequiredError } = await import('@shared');
+		await expect(useCase.execute(userId, request)).rejects.toThrow(ConsentRequiredError);
+		expect(mockRepository.save).not.toHaveBeenCalled();
 	});
 
 	it('should throw error when client validation fails', async () => {
@@ -106,9 +133,10 @@ describe('GenerateAuthCodeUseCase', () => {
 
 		await useCase.execute(userId, request);
 
-		expect(mockLogger.debug).toHaveBeenCalledWith('Generating authorization code', expect.any(Object));
-		expect(mockLogger.debug).toHaveBeenCalledWith('Client validated for authorization', expect.any(Object));
-		expect(mockLogger.debug).toHaveBeenCalledWith('Authorization code generated', expect.any(Object));
+		expect(mockLogger.debug).toHaveBeenCalledWith('[GenerateAuthCodeUseCase.execute] Generating authorization code', expect.any(Object));
+		expect(mockLogger.debug).toHaveBeenCalledWith('[GenerateAuthCodeUseCase.execute] Client validated for authorization', expect.any(Object));
+		expect(mockLogger.debug).toHaveBeenCalledWith('[GenerateAuthCodeUseCase.execute] User has valid consent, proceeding with code generation', expect.any(Object));
+		expect(mockLogger.debug).toHaveBeenCalledWith('[GenerateAuthCodeUseCase.execute] Authorization code generated', expect.any(Object));
 	});
 
 	it('should log error when unexpected error occurs', async () => {
@@ -127,7 +155,7 @@ describe('GenerateAuthCodeUseCase', () => {
 
 		await expect(useCase.execute(userId, request)).rejects.toThrow();
 		expect(mockLogger.error).toHaveBeenCalledWith(
-			'Unexpected error generating authorization code',
+			'[GenerateAuthCodeUseCase.execute] Unexpected error generating authorization code',
 			expect.objectContaining({ client_id: 'test-client-id' })
 		);
 	});

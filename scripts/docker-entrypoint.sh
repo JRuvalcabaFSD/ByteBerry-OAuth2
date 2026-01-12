@@ -137,15 +137,14 @@ if [ "$NODE_ENV" = "test" ]; then
     setup_jwt_keys
 else
 
-		# TODO F2
-		# # Step 1: Wait for database
-		# wait_for_db
+		# Step 1: Wait for database
+		wait_for_db
 
-		# # Step 2: Run migrations (idempotent)
-		# run_migrations
+		# Step 2: Run migrations (idempotent)
+		run_migrations
 
-		# # Step 3: Run seed (dev only, idempotent)
-		# run_seed
+		# Step 3: Run seed (dev only, idempotent)
+		run_seed
 
 		# Step 4: Setup JWT keys
 		setup_jwt_keys

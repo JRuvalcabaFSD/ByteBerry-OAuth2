@@ -4,8 +4,9 @@ import * as Controllers from '@presentation';
 import * as Routes from '@presentation';
 
 import { Injectable } from '@shared';
-import { createSessionMiddleware, RedirectToLoginErrorHandle } from '@presentation';
 import type { HomeResponse, IClock, IConfig, IHealthService, ILogger, ISessionRepository } from '@interfaces';
+import { createSessionMiddleware, createUserRoutes, RedirectToLoginErrorHandle, UnAuthorizedErrorHandle } from '@presentation';
+import { createClientRoutes } from './client.routes.js';
 
 /**
  * Augments the ServiceMap interface to include the AppRouter service.
@@ -33,6 +34,8 @@ declare module '@ServiceMap' {
 		'authController',
 		'tokenController',
 		'jwksController',
+		'UserController',
+		'ClientController',
 	],
 })
 export class AppRouter {
@@ -47,7 +50,9 @@ export class AppRouter {
 		private readonly loginCtl: Controllers.LoginController,
 		private readonly authCtl: Controllers.AuthController,
 		private readonly tokenCtl: Controllers.TokenController,
-		private readonly jwksCtl: Controllers.JwksController
+		private readonly jwksCtl: Controllers.JwksController,
+		private readonly userCtl: Controllers.UserController,
+		private readonly clientCtl: Controllers.ClientController
 	) {
 		this.router = Router();
 		this.setupRoutes();
@@ -75,11 +80,16 @@ export class AppRouter {
 	private setupRoutes(): void {
 		const baseurl = `${this.config.serviceUrl}:${this.config.port}`;
 
-		// TODO RequireSession
-		// const requireSession = createSessionMiddleware(this.sessionRepository, this.logger, { onError: new UnAuthorizedErrorHandle() });
+		const requireSession = createSessionMiddleware(this.sessionRepository, this.logger, { onError: new UnAuthorizedErrorHandle() });
 		const requireSessionRedirect = createSessionMiddleware(this.sessionRepository, this.logger, {
 			onError: new RedirectToLoginErrorHandle(),
 		});
+
+		// Client
+		this.router.use('/client', requireSession, createClientRoutes(this.clientCtl));
+
+		// User
+		this.router.use('/user', createUserRoutes(this.userCtl, requireSession));
 
 		//Auth
 		this.router.use('/auth', Routes.createAuthRoutes(this.loginCtl, this.authCtl, this.tokenCtl, this.jwksCtl, requireSessionRedirect));
@@ -122,19 +132,31 @@ export class AppRouter {
 
 	private getRoutesList(baseUrl: string): Record<string, unknown> | string[] {
 		const routes = [
+			//Home and health
 			{ name: 'home', value: `${baseUrl}/`, method: 'GET' },
 			{ name: 'deepHealth', value: `${baseUrl}/health/deep`, method: 'GET' },
 			{ name: 'health', value: `${baseUrl}/health`, method: 'GET' },
+			// OAuth and Authorized
 			{ name: 'authorize', value: `${baseUrl}/auth/authorize`, method: 'GET' },
 			{ name: 'JWKS', value: `${baseUrl}/auth/.well-known/jwks.json`, method: 'GET' },
-			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'POST' },
+			{ name: 'showLoginForm', value: `${baseUrl}/auth/login`, method: 'POST' },
 			{ name: 'login', value: `${baseUrl}/auth/login`, method: 'GET' },
 			{ name: 'token', value: `${baseUrl}/auth/token`, method: 'POST' },
-			// { name: 'user', value: `${baseUrl}/user/register`, method: 'POST' },
-			// { name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
-			// { name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
-			// { name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
-			// { name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
+			{ name: 'showConsentForm', value: `${baseUrl}/auth/authorize/consent`, method: 'GET' },
+			{ name: 'consentProcess', value: `${baseUrl}/auth/authorize/decision`, method: 'PUT' },
+			// User
+			{ name: 'user', value: `${baseUrl}/user/`, method: 'POST' },
+			{ name: 'currentUser', value: `${baseUrl}/user/me`, method: 'GET' },
+			{ name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
+			{ name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
+			{ name: 'listConsents', value: `${baseUrl}/user/me/consents`, method: 'PUT' },
+			// Client
+			{ name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
+			{ name: 'listClients', value: `${baseUrl}/client`, method: 'GET' },
+			{ name: 'getClient', value: `${baseUrl}/client/:id`, method: 'GET' },
+			{ name: 'updateClient', value: `${baseUrl}/client/:id`, method: 'PUT' },
+			{ name: 'deleteClient', value: `${baseUrl}/client/:id`, method: 'DELETE' },
+			{ name: 'clientRotateSecret', value: `${baseUrl}/client/:id/rotate-secret`, method: 'POST' },
 		];
 
 		return routes.reduce(

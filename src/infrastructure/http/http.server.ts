@@ -188,7 +188,7 @@ export class HttpServer implements IHttpServer {
 		this.app.set('trust proxy', true);
 		this.app.disable('x-powered-by');
 		this.app.use(Middlewares.createSecurityMiddleware());
-		this.app.use(Middlewares.createCORSMiddleware(this.config));
+		this.app.use(Middlewares.createCORSMiddleware(this.config, ['/auth']));
 		this.app.use(Middlewares.createRequestIdMiddleware(this.uuid));
 		this.app.use(Middlewares.createLoggingMiddleware(this.logger, this.clock, this.config.logRequests));
 		this.app.use(express.json({ limit: '10mb' }));

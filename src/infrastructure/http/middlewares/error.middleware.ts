@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from 'express';
 
-import { getErrStack, HttpError, withLoggerContext } from '@shared';
+import { getErrStack, HttpError, withLoggerContext, DatabaseError } from '@shared';
 import { IConfig, ILogger } from '@interfaces';
 
 /**
@@ -53,6 +53,19 @@ const HANDLERS = new Map<string, ErrorHandler>([
 
 			res.status(e.statusCode).json({
 				error: e.errorCause,
+				message: e.message,
+				requestId: req.requestId || 'unknown',
+				timestamp: new Date().toISOString(),
+			});
+		},
+	],
+	[
+		'database',
+		(error, req, res, _config) => {
+			const e = error as DatabaseError;
+
+			res.status(e.statusCode).json({
+				error: e.cause,
 				message: e.message,
 				requestId: req.requestId || 'unknown',
 				timestamp: new Date().toISOString(),

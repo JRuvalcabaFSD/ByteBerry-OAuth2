@@ -34,7 +34,10 @@ import { criticalServices } from '@container';
  */
 
 @LogContextClass()
-@Injectable({ name: 'HealthService', depends: ['Config', 'Uuid', 'Clock', 'Logger', 'HealthRegistry', 'JwksService'] })
+@Injectable({
+	name: 'HealthService',
+	depends: ['Config', 'Uuid', 'Clock', 'Logger', 'HealthRegistry', 'JwksService', 'DatabaseHealthChecker'],
+})
 export class HealthService implements Interfaces.IHealthService {
 	constructor(
 		private readonly config: Interfaces.IConfig,
@@ -42,9 +45,8 @@ export class HealthService implements Interfaces.IHealthService {
 		private readonly clock: Interfaces.IClock,
 		private readonly logger: Interfaces.ILogger,
 		private readonly healthRegistry: Interfaces.IHealthRegistry,
-		private readonly jwksService: Interfaces.IJwksService
-		// TODO F2
-		// private readonly dbHealthChecker: Interfaces.IDatabaseHealthChecker;
+		private readonly jwksService: Interfaces.IJwksService,
+		private readonly dbHealthChecker: Interfaces.IDatabaseHealthChecker
 	) {}
 
 	/**
@@ -122,9 +124,7 @@ export class HealthService implements Interfaces.IHealthService {
 				jwksAvailable: response.jwks.status === 'healthy',
 				jwksKeyCount: response.jwks.keyCount,
 				jwksResponseTime: response.jwks.responseTime,
-
-				// TODO F2
-				// databaseConnected: response.database?.connected ?? false,
+				databaseConnected: response.database?.connected ?? false,
 			});
 
 			const statusCode = response.status === 'healthy' ? 200 : response.status === 'degraded' ? 200 : 503;
@@ -169,11 +169,9 @@ export class HealthService implements Interfaces.IHealthService {
 		const dependencies = await this.checkDependencies(services);
 		const systemInfo = this.getSystemInfo();
 		const jwksHealth = await this.checkJwksAvailability();
-		// TODO F2
-		// const databaseHealth = await this.checkDatabaseHealth();
+		const databaseHealth = await this.checkDatabaseHealth();
 
-		// TODO Implement F2 property
-		const overallStatus = this.determineOverallStatus(dependencies, jwksHealth);
+		const overallStatus = this.determineOverallStatus(dependencies, jwksHealth, databaseHealth);
 
 		const response: Partial<Interfaces.DeepHealthResponse> = {
 			status: overallStatus,
@@ -188,8 +186,7 @@ export class HealthService implements Interfaces.IHealthService {
 		if (type === 'deep') {
 			response.dependencies = dependencies;
 			response.jwks = jwksHealth;
-			// TODO F2
-			// response.database = databaseHealth;
+			response.database = databaseHealth;
 			response.system = systemInfo;
 			return response as Interfaces.DeepHealthResponse;
 		}
@@ -304,9 +301,8 @@ export class HealthService implements Interfaces.IHealthService {
 
 	private determineOverallStatus(
 		dependencies: Record<string, Interfaces.DependencyResponse>,
-		jwksHealth: Interfaces.JwksHealthResponse
-		// TODO F2
-		// databaseHealth: Interfaces.DatabaseHealthResponse
+		jwksHealth: Interfaces.JwksHealthResponse,
+		databaseHealth: Interfaces.DatabaseHealthResponse
 	): 'healthy' | 'unhealthy' | 'degraded' {
 		const statuses = Object.values(dependencies).map((dep) => dep.status);
 
@@ -318,10 +314,9 @@ export class HealthService implements Interfaces.IHealthService {
 			return 'unhealthy';
 		}
 
-		// TODO F2
-		// if (!databaseHealth.connected) {
-		// 	return 'unhealthy';
-		// }
+		if (!databaseHealth.connected) {
+			return 'unhealthy';
+		}
 
 		if (statuses.some((status) => status === 'unhealthy')) {
 			return 'unhealthy';
@@ -509,7 +504,6 @@ export class HealthService implements Interfaces.IHealthService {
 		}
 	}
 
-	// TODO F2
 	/**
 	 * Checks the health status of the database by invoking the `dbHealthChecker` service.
 	 *
@@ -520,42 +514,41 @@ export class HealthService implements Interfaces.IHealthService {
 	 * @returns {Promise<Interfaces.DatabaseHealthResponse>} A promise that resolves to the database health status.
 	 */
 
-	// @LogContextMethod()
-	// private async checkDatabaseHealth(): Promise<Interfaces.DatabaseHealthResponse> {
-	// 	const defaultResponse: Interfaces.DatabaseHealthResponse = {
-	// 		connected: false,
-	// 		latency: 0,
-	// 		tables: {
-	// 			users: false,
-	// 			oAuthClients: false,
-	// 			authCodes: false,
-	// 			refreshTokens: false,
-	// 		},
-	// 	};
+	@LogContextMethod()
+	private async checkDatabaseHealth(): Promise<Interfaces.DatabaseHealthResponse> {
+		const defaultResponse: Interfaces.DatabaseHealthResponse = {
+			connected: false,
+			latency: 0,
+			tables: {
+				users: false,
+				oAuthClients: false,
+				authCodes: false,
+			},
+		};
 
-	// 	try {
-	// 		if (!this.dbHealthChecker) {
-	// 			this.logger.warn('DataBaseHealthChecker not available in container');
-	// 			return defaultResponse;
-	// 		}
+		try {
+			if (!this.dbHealthChecker) {
+				this.logger.warn('DataBaseHealthChecker not available in container');
+				return defaultResponse;
+			}
 
-	// 		const healthStatus = await this.dbHealthChecker.getHealthStatus();
+			const healthStatus = await this.dbHealthChecker.getHealthStatus();
 
-	// 		this.logger.debug('Database health check completed via DataBaseHealthCheckerService', {
-	// 			connected: healthStatus.connected,
-	// 			latency: healthStatus.latency,
-	// 		});
+			this.logger.debug('Database health check completed via DataBaseHealthCheckerService', {
+				connected: healthStatus.connected,
+				latency: healthStatus.latency,
+			});
 
-	// 		return healthStatus;
-	// 	} catch (error) {
-	// 		this.logger.error('Database health check failed', {
-	// 			error: getErrMsg(error),
-	// 		});
+			return healthStatus;
+		} catch (error) {
+			this.logger.error('Database health check failed', {
+				error: getErrMessage(error),
+			});
 
-	// 		return {
-	// 			...defaultResponse,
-	// 			error: getErrMsg(error),
-	// 		};
-	// 	}
-	// }
+			return {
+				...defaultResponse,
+				error: getErrMessage(error),
+			};
+		}
+	}
 }

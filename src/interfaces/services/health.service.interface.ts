@@ -13,6 +13,7 @@ declare module '@ServiceMap' {
 	interface ServiceMap {
 		HealthService: IHealthService;
 		HealthRegistry: IHealthRegistry;
+		DatabaseHealthChecker: IDatabaseHealthChecker;
 	}
 }
 
@@ -36,7 +37,14 @@ declare module '@ServiceMap' {
 
 export interface IDatabaseHealthChecker {
 	checkConnection(): Promise<boolean>;
-	checkTables(): Promise<{ users: boolean; oAuthClients: boolean; authCodes: boolean; refreshTokens: boolean }>;
+	checkTables(): Promise<{
+		users: boolean;
+		oAuthClients: boolean;
+		authCodes: boolean;
+		sessions: boolean;
+		userConsents: boolean;
+		scopeDefinitions: boolean;
+	}>;
 	getHealthStatus(): Promise<DatabaseHealthResponse>;
 }
 
@@ -112,4 +120,38 @@ export interface HealthCheckable {
 export interface IHealthRegistry {
 	register(name: string, service: HealthCheckable): void;
 	getCheckers(): Map<keyof ServiceMap, HealthCheckable>;
+}
+
+/**
+ * Represents the health status response of the data service.
+ *
+ * @property connected Indicates if the service is connected to the data source.
+ * @property latency The measured latency (in milliseconds) for the health check.
+ * @property tables An object specifying the availability of key database tables.
+ * @property tables.user Indicates if the 'user' table is accessible.
+ * @property tables.oAuthClients Indicates if the 'oAuthClients' table is accessible.
+ * @property tables.authCodes Indicates if the 'authCodes' table is accessible.
+ * @property tables.refreshTokens Indicates if the 'refreshTokens' table is accessible.
+ * @property recordCounts (Optional) An object containing the record counts for each table.
+ * @property recordCounts.users The number of records in the 'users' table.
+ * @property recordCounts.oAut5hClients The number of records in the 'oAuthClients' table.
+ * @property recordCounts.authCodes The number of records in the 'authCodes' table.
+ * @property recordCounts.refreshTokens The number of records in the 'refreshTokens' table.
+ * @property error (Optional) An error message if the health check failed.
+ */
+
+export interface IDatabaseHealthResponse {
+	connected: boolean;
+	latency: number;
+	tables: {
+		users: boolean;
+		oAuthClients: boolean;
+		authCodes: boolean;
+	};
+	recordCounts?: {
+		users: number;
+		oAuthClients: number;
+		authCodes: number;
+	};
+	error?: string;
 }

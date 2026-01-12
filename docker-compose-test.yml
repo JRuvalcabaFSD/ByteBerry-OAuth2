@@ -1,0 +1,36 @@
+# Docker Compose para base de datos de tests de integración
+# Uso: pnpm test:db:up / pnpm test:db:down
+
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: byteberry-oauth2-test-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: byteberry_oauth2_test
+    ports:
+      - "5433:5432"  # Puerto diferente al de desarrollo (5432)
+
+    # tmpfs hace que la DB corra en RAM = MÁS RÁPIDO
+    # Los datos se pierden al detener el contenedor (perfecto para tests)
+    tmpfs:
+      - /var/lib/postgresql/data
+
+    # Health check para asegurar que la DB está lista
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d byteberry_oauth2_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    # Logging mínimo para no saturar output de tests
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    name: byteberry-oauth2-test-network

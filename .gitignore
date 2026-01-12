@@ -246,3 +246,5 @@ keys/
 public/**/*.css
 
 /generated/prisma
+
+/generated/prisma

@@ -1,4 +1,5 @@
-import { CodeRequestDTO, CodeResponseDTO, LoginRequestDTO, LoginResponseDTO, TokenRequestDTO, TokenResponseDTO } from '@application';
+import * as Dtos from '@application';
+
 import { CodeChallengeVO } from '@domain';
 import { JwksResponse } from '@interfaces';
 
@@ -28,7 +29,7 @@ declare module '@ServiceMap' {
  */
 
 export interface ILoginUseCase {
-	execute(request: LoginRequestDTO): Promise<LoginResponseDTO>;
+	execute(request: Dtos.LoginRequestDTO): Promise<Dtos.LoginResponseDTO>;
 }
 
 /**
@@ -43,7 +44,7 @@ export interface ILoginUseCase {
  */
 
 export interface IGenerateAuthCodeUseCase {
-	execute(userId: string, request: CodeRequestDTO): Promise<CodeResponseDTO>;
+	execute(userId: string, request: Dtos.CodeRequestDTO): Promise<Dtos.CodeResponseDTO>;
 }
 
 /**
@@ -89,7 +90,7 @@ export interface IPkceVerifierUseCase {
  */
 
 export interface IExchangeTokenUseCase {
-	execute(request: TokenRequestDTO): Promise<TokenResponseDTO>;
+	execute(request: Dtos.TokenRequestDTO): Promise<Dtos.TokenResponseDTO>;
 }
 
 /**

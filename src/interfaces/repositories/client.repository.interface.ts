@@ -49,6 +49,13 @@ declare module '@ServiceMap' {
  * @method existByClientId Checks if an OAuth client exists by its client ID.
  * @param clientId - The unique client identifier.
  * @returns A promise that resolves to true if the client exists, false otherwise.
+ *
+ * @method rotateSecret Rotates the client secret for a given OAuth client.
+ * @param clientId - The unique client identifier.
+ * @param newSecretHash - The hashed value of the new client secret.
+ * @param oldSecretHash - The hashed value of the current client secret to be archived.
+ * @param gracePeriodExpiration - The expiration date for the grace period during which both secrets are valid.
+ * @returns A promise that resolves when the operation is complete.
  */
 
 export interface IClientRepository {
@@ -60,4 +67,5 @@ export interface IClientRepository {
 	update(client: ClientEntity): Promise<void>;
 	softDelete(id: string): Promise<void>;
 	existByClientId(clientId: string): Promise<boolean>;
+	rotateSecret(clientId: string, newSecretHash: string, oldSecretHash: string, gracePeriodExpiration: Date): Promise<void>;
 }
