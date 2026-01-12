@@ -1,3 +1,35 @@
+# [1.2.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.1.0...v1.2.0) (2026-01-12)
+
+
+### Features
+
+* **ci:** update test commands to run all tests with coverage in CI workflows ([98b55bf](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/98b55bf5269230ebb305cd53b438820094f99b8a))
+* **client:** Implement delete client functionality with use case, controller method, and routes ([b75ff1b](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/b75ff1b32842b901bbe90fc0138a679e6977474d)), closes [#35](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/35)
+* **client:** Implement get client by ID functionality with use case and controller method ([9304449](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/9304449b5f11eeab8a7408c3583bac5b36e27574)), closes [#33](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/33)
+* **client:** Implement list clients functionality with DTO and use case ([6b023c7](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/6b023c7d944d901bd4584bb480e4b45425ff124c)), closes [#32](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/32)
+* **client:** Implement OAuth2 client management with creation and validation ([05991e5](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/05991e5843db5f384eaa8a4876d815639ca76783)), closes [#31](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/31)
+* **client:** Implement rotate client secret functionality with use case, controller method, and routes ([c76b30e](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/c76b30e0cc44777527029ee5e14d62cf278b52be)), closes [#36](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/36)
+* **client:** Implement update client functionality with DTO, use case, and controller method ([6d53aa3](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/6d53aa38cee486b3b226547316bb47e0fc8f4905)), closes [#34](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/34)
+* **consent:** Implement consent decision processing and related DTOs, update routes and middleware ([60ffddc](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/60ffddc17c3718ce9fe964a814a8c4e34534ca93)), closes [#39](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/39)
+* **consent:** Implement consent management with repository, entity, and use case for user consent validation ([bdff66c](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/bdff66cf7d362bcd80776da16038c74bca4fd18c)), closes [#37](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/37)
+* **consent:** Implement consent screen with display logic, use case, and view template ([6c10f84](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/6c10f848696cef745557a9ee82a4e7e50c810efd)), closes [#38](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/38)
+* **consent:** Implement delete consent use case, repository method, and controller integration ([890ce88](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/890ce883680c2e73dfbad0c199307d2638858c13)), closes [#41](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/41)
+* **consent:** Implement list consents use case, DTOs, and controller integration ([a63aa0b](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/a63aa0bd0eca78f4b4f6053f0b179bb2dbc87b11)), closes [#40](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/40)
+* **database:** add PostgreSQL configuration and DBConfig class for database management ([85d7309](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/85d7309ef6669ac8208e6b0742a15270beacbc04))
+* **database:** add PostgreSQL configuration and initial migration for user management ([772bd64](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/772bd64efe3d45dbbd0d94a827f654ab5757829d)), closes [#21](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/21)
+* **health:** implement database health checker service and integrate into health service ([f05eb26](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/f05eb26d3ab2469e084dcbb0106177b9f6a951b4)), closes [#46](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/46) [#47](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/47)
+* **seed:** add seed script for users, OAuth client, and scope definitions ([a1049a9](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/a1049a94b03526abfb6f08e68ead94fb10173ecc)), closes [#24](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/24)
+* **test:** add integration tests for SessionRepository and UserRepository ([b8ebfce](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/b8ebfcebee34d3d5c6c320fa431db1b1323423a5)), closes [#45](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/45)
+* **test:** add unit tests for use cases: ListClient, ListConsent, ProcessConsent, RegisterUser, RotateSecret, ShowConsent, UpdateClient, UpdatePassword, and UpdateUser ([15022ce](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/15022ce4fb436d2c056c61293b47173edcc0348e))
+* **tests:** add integration tests for consent management, OAuth2 flow, and password change flow ([9365b8a](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/9365b8abebc70c888d7a48659606d089dea1d978))
+* **tests:** add unit tests for DatabaseHealthService and improve health checks in HealthService ([e1be8d5](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/e1be8d5457584b22f4bd35d39a372ea6fea0f93e))
+* **tests:** enhance integration testing setup and add ConsentRepository tests ([12f566f](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/12f566fb37a0cbff5dc4b40eccf4eca55571ce6d))
+* **tests:** remove dotenv configuration from integration tests and disable file parallelism in unit tests ([119b51e](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/119b51e4385bfe7537cef78d970979cdd250bb5d))
+* **user:** - Added UpdatePassword use case to handle password updates with session revocation option. ([1510504](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/151050455f2e625203c434c6503b59e9f4791bf2)), closes [#30](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/30)
+* **user:** add get user use case and controller method for retrieving user information ([c8e0e8e](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/c8e0e8e790ce4ccda0426e2bfd1a34acf8a86917)), closes [#28](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/28)
+* **user:** implement update user functionality with DTOs, use cases, and routes ([77409c5](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/77409c5d2238d266a857c34b6281aba4362c1b48)), closes [#29](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/29)
+* **user:** implement user registration functionality with DTOs, use cases, and routes ([0d5b970](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/0d5b970019e30bacbe81ba27132d85ca2d1345d1)), closes [#26](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/26)
+
 # [1.1.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.0.0...v1.1.0) (2026-01-07)
 
 
