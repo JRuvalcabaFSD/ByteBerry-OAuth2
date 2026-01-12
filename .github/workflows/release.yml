@@ -71,7 +71,7 @@ jobs:
           pnpm audit
           pnpm build
           # Modificar si se agregan tests que requieran DB
-          pnpm test:unit
+          pnpm test:ci
 
       - name: 📦 Upload build artifacts
         uses: actions/upload-artifact@v4

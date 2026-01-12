@@ -181,19 +181,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: 🧪 Run unit tests with coverage
+      - name: 🧪 Run all tests with coverage
         run: |
           export NODE_ENV=test
           export CI=true
-          pnpm test:unit
-
-      # F1
-      # - name: 🧪 Run integration tests
-      #   env:
-      #     DATABASE_URL: postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public
-      #     NODE_ENV: test
-      #     CI: true
-      #   run: pnpm test:integration
+          pnpm test:ci
 
   security:
     name: 🔒 Security Audit
