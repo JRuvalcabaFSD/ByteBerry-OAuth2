@@ -27,7 +27,7 @@
 		"dev": "pnpm run dev:app --parallel & pnpm run dev:css",
 		"start": "node dist/src/app.js",
 		"db": "prisma",
-		"db:up": "docker-compose up -d",
+		"db:up": "docker-compose up -d 'oauth2-db'",
 		"db:down": "docker-compose down -v",
 		"db:setup": "pnpm db:up && pnpm db generate && pnpm db migrate dev && pnpm db:seed",
 		"db:reset": "pnpm db migrate reset --force",
@@ -53,9 +53,9 @@
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"type-check": "tsc --noEmit -p tsconfig.check.json",
-		"quality": "pnpm type-check && pnpm lint && pnpm test:unit --run",
+		"quality": "pnpm type-check && pnpm lint && pnpm test:ci",
 		"docker:build": "TEST_VERSION=dev ./scripts/docker-build.sh",
-		"docker:run": "docker run --rm -p 4000:4000 --env-file .env jruvalcabafsd/byteberry-oauth2:dev",
+		"docker:run": "docker compose -f docker-compose.yml up -d",
 		"generate:keys": "node scripts/generate-keys.mjs"
 	},
 	"devDependencies": {
@@ -89,7 +89,6 @@
 		"jiti": "^2.6.1",
 		"jsdoc": "^4.0.5",
 		"prettier": "^3.7.3",
-		"prisma": "^7.1.0",
 		"semantic-release": "^25.0.2",
 		"supertest": "^7.1.4",
 		"ts-node": "^10.9.2",
@@ -105,6 +104,7 @@
 	"dependencies": {
 		"@prisma/adapter-pg": "^7.1.0",
 		"@prisma/client": "^7.1.0",
+		"prisma": "^7.1.0",
 		"@tailwindcss/postcss": "^4.1.18",
 		"bcrypt": "^6.0.0",
 		"cookie-parser": "^1.4.7",

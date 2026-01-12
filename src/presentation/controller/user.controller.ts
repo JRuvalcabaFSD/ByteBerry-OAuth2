@@ -194,7 +194,7 @@ export class UserController {
 	public revokeConsent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const userId = req.user!.userId;
-			const consentId = req.params.id;
+			const consentId = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
 
 			await this.deleteConsentUseCase.execute(userId, consentId);
 

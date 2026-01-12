@@ -19,8 +19,32 @@ services:
       timeout: 10s
       retries: 3
 
+  # OAuth2 Service - INTERNO SOLAMENTE
+  byteberry-oauth2:
+    image: jruvalcabafsd/byteberry-oauth2:dev
+    container_name: byteberry-oauth2
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://oauth2_user:oauth2_pass@oauth2-db:5432/byteberry_oauth2_dev?schema=public
+    ports:
+      - "4000:4000" # ← SOLO PARA DESARROLLO LOCAL
+    networks:
+      - byteberry-network
+    depends_on:
+      oauth2-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
 volumes:
   oauth2_db_data:
+  expenses_db_data:
 
 networks:
   byteberry-network:

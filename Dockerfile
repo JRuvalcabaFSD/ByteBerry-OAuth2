@@ -10,8 +10,7 @@ WORKDIR /app
 
 # Copiar solo archivos de dependencias
 COPY package.json pnpm-lock.yaml ./
-# TODO F2
-# COPY prisma ./prisma/
+COPY prisma ./prisma/
 
 # Instalar SOLO dependencias de producción
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -38,10 +37,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 	pnpm install --no-frozen-lockfile
 
 
-# TODO F2
 # Copiar Prisma schema y config para generar cliente
-# COPY prisma ./prisma/
-# COPY prisma.config.ts ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 COPY tsconfig*.json ./
 COPY src ./src
@@ -53,9 +51,8 @@ COPY views ./views
 # DATABASE_URL dummy para Prisma generate
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
-# TODO F2
 # Generar Prisma Client
-# RUN pnpm prisma generate
+RUN pnpm prisma generate
 
 # ARG VERSION inyectado desde GitHub Actions
 ARG VERSION=dev
@@ -101,9 +98,8 @@ RUN chown -R nodejs:nodejs /app
 # Copiar node_modules de producción desde stage deps
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
-# TODO F2
 # Copiar Prisma generado
-# COPY --from=builder --chown=nodejs:nodejs /app/generated ./generated
+COPY --from=builder --chown=nodejs:nodejs /app/generated ./generated
 
 # Copiar código compilado desde builder
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
@@ -111,10 +107,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 # Copiar package.json actualizado con versión desde builder
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
 
-# TODO F2
 # Copiar archivos necesarios para runtime (migraciones)
-# COPY --chown=nodejs:nodejs prisma ./prisma/
-# COPY prisma.config.ts ./
+COPY --chown=nodejs:nodejs prisma ./prisma/
+COPY prisma.config.ts ./
 
 # Copiar scripts necesarios
 COPY --chown=nodejs:nodejs scripts/docker-entrypoint.sh ./scripts/

@@ -132,7 +132,7 @@ export class ClientController {
 	public getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const userId = req.user!.userId;
-			const clientId = req.params.id;
+			const clientId = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
 
 			const response = await this.getUseCase.execute(userId, clientId);
 
@@ -161,7 +161,7 @@ export class ClientController {
 	public update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const userId = req.user!.userId;
-			const clientId = req.params.id;
+			const clientId = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
 
 			const request = UpdateClientRequestDTO.fromBody(req.body);
 			const response = await this.updateUseCase.execute(userId, clientId, request);
@@ -185,7 +185,7 @@ export class ClientController {
 	public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const userId = req.user!.userId;
-			const clientId = req.params.id;
+			const clientId = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
 
 			await this.deleteUseCase.execute(userId, clientId);
 
@@ -207,7 +207,7 @@ export class ClientController {
 	public rotate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const userId = req.user!.userId;
-			const clientId = req.params.id;
+			const clientId = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
 
 			const response = this.rotateUseCase.execute(userId, clientId);
 
