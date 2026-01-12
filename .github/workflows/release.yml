@@ -62,7 +62,7 @@ jobs:
 
       - name: 📝 Run full validation
         env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/oauth2_test?schema=public
+          DATABASE_URL: postgres://postgres:postgres@localhost:5433/byteberry_oauth2_test?schema=public
         run: |
           export NODE_ENV=test
           export CI=true
