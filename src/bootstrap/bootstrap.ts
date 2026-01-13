@@ -33,12 +33,13 @@ export async function bootstrap({ skipDbValidation = false } = {}): Promise<boot
 		const container = bootstrapContainer();
 		const gracefulShutdown = container.resolve('GracefulShutdown');
 		const httpServer = container.resolve('HttpServer');
+		const DBConfig = container.resolve('DBConfig');
 
 		logger = withLoggerContext(container.resolve('Logger'), 'bootstrap');
 
 		logger.info('Service starting');
 
-		const shutdown = configureShutdown(gracefulShutdown, logger, httpServer);
+		const shutdown = configureShutdown(gracefulShutdown, logger, httpServer, DBConfig);
 
 		if (!skipDbValidation) {
 			await validateDbConnection(container, logger);

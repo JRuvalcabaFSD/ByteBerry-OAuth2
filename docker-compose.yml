@@ -21,7 +21,7 @@ services:
 
   # OAuth2 Service - INTERNO SOLAMENTE
   byteberry-oauth2:
-    image: jruvalcabafsd/byteberry-oauth2:dev
+    image: jruvalcabafsd/byteberry-oauth2:latest
     container_name: byteberry-oauth2
     env_file:
       - .env
