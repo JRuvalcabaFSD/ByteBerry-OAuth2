@@ -248,3 +248,6 @@ public/**/*.css
 /generated/prisma
 
 /generated/prisma
+
+
+/docs
