@@ -1,70 +1,83 @@
-import { ValueObjectError } from '@domain';
+import { ValueObjectError } from '../errors/domain.errors.js';
 
 /**
- * Value object representing a client identifier in the OAuth2 domain.
+ * Value Object representing a Client ID.
  *
- * @remarks
- * This class encapsulates a client ID string with validation rules ensuring:
- * - The value is not empty or whitespace-only
- * - The length is between 8 and 128 characters
+ * Enforces validation rules:
+ * - Must be a non-empty string.
+ * - Length must be between 3 and 255 characters.
+ * - Only alphanumeric characters, hyphens, and underscores are allowed.
  *
- * The class follows the value object pattern with immutability and equality comparison.
+ * Use {@link ClientIdVO.create} to instantiate.
  *
  * @example
  * ```typescript
- * const clientId = ClientIdVO.create('my-client-id-123');
- * console.log(clientId.getValue()); // 'my-client-id-123'
+ * const clientId = ClientIdVO.create('my-client_123');
  * ```
- *
- * @throws {Error} When the client ID is empty or whitespace-only
- * @throws {Error} When the client ID length is not between 8 and 128 characters
  */
 
 export class ClientIdVO {
-	/**
-	 * Creates a new instance of the value object.
-	 * This constructor is private to enforce the use of factory methods for object creation.
-	 *
-	 * @param value - The string value to be encapsulated by this value object
-	 * @private
-	 */
+	private static readonly MIN_LENGTH = 3;
+	private static readonly MAX_LENGTH = 255;
 
-	private constructor(private readonly value: string) {}
+	private constructor(private readonly value: string) {
+		this.validate(value);
+	}
 
 	/**
-	 * Creates a new instance of `ClientIdVO` after validating the provided client ID string.
+	 * Creates a new instance of `ClientIdVO` using the provided string value.
 	 *
-	 * @param value - The client ID string to validate and encapsulate.
-	 * @returns A new `ClientIdVO` instance containing the validated client ID.
-	 * @throws {ValueObjectError} If the client ID is null, undefined, empty, or its length is not between 8 and 128 characters.
+	 * @param value - The client identifier as a string.
+	 * @returns A new `ClientIdVO` instance initialized with the given value.
 	 */
 
-	static create(value: string | null | undefined): ClientIdVO {
-		if (value === null) throw new ValueObjectError('Client ID cannot be null');
-		if (value === undefined) throw new ValueObjectError('Client ID cannot be undefined');
-		if (value.trim().length === 0) throw new ValueObjectError('Client ID cannot be empty');
-		if (value.length < 8 || value.length > 128) throw new ValueObjectError('Client ID must be between 8 and 128 characters');
+	public static create(value: string): ClientIdVO {
 		return new ClientIdVO(value);
 	}
 
 	/**
-	 * Retrieves the client identifier value.
+	 * Returns the underlying string value of the client ID.
 	 *
-	 * @returns The string representation of the client ID.
+	 * @returns {string} The client ID value.
 	 */
 
 	public getValue(): string {
 		return this.value;
 	}
 
+	equals(other: ClientIdVO): boolean {
+		if (!other) return false;
+		return this.value === other.value;
+	}
+
 	/**
-	 * Compares this ClientId with another ClientId for equality.
+	 * Returns the string representation of the client ID value object.
 	 *
-	 * @param other - The ClientId instance to compare with
-	 * @returns `true` if both ClientId instances have the same value, `false` otherwise
+	 * @returns {string} The client ID as a string.
 	 */
 
-	public equals(other: ClientIdVO): boolean {
-		return this.value === other.value;
+	public toString(): string {
+		return this.value;
+	}
+
+	/**
+	 * Validates the provided client ID string according to the following rules:
+	 * - Must not be empty or consist solely of whitespace.
+	 * - Must be at least {@link ClientIdVO.MIN_LENGTH} characters long.
+	 * - Must not exceed {@link ClientIdVO.MAX_LENGTH} characters.
+	 * - Must only contain alphanumeric characters, hyphens, and underscores.
+	 *
+	 * @param value - The client ID string to validate.
+	 * @throws ValueObjectError If the value does not meet any of the validation criteria.
+	 */
+
+	public validate(value: string): void {
+		if (!value || value.trim().length === 0) throw new ValueObjectError('Client ID cannot be empty');
+		if (value.length < ClientIdVO.MIN_LENGTH) throw new ValueObjectError(`Client ID must be at least ${ClientIdVO.MIN_LENGTH} characters`);
+		if (value.length > ClientIdVO.MAX_LENGTH) throw new ValueObjectError(`Client ID cannot exceed ${ClientIdVO.MIN_LENGTH} characters`);
+
+		const validPattern = /^[a-zA-Z0-9_-]+$/;
+		if (!validPattern.test(value))
+			throw new ValueObjectError('ClientId can only contain alphanumeric characters, hyphens, and underscores');
 	}
 }

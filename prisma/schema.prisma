@@ -15,150 +15,119 @@ datasource db {
 }
 
 // ============================================================================
-// USER MANAGEMENT
+// ENUMS
+// ============================================================================
+
+enum ClientType {
+  SYSTEM // First-party clients (BFF, internal services)
+  THIRD_PARTY // External developer applications
+}
+
+// ============================================================================
+// MODELS
 // ============================================================================
 
 model User {
-  id            String   @id @default(cuid())
+  id            String   @id @default(uuid())
+  username      String   @unique
   email         String   @unique
-  username      String?  @unique
-  passwordHash  String
-  fullName      String?
-  roles         String[] // ['user', 'admin']
-  isActive      Boolean  @default(true)
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   // Relations
-  sessions           Session[]
-  authorizationCodes AuthorizationCode[]
-  userConsents       UserConsent[]
-  oauthClients       OAuthClient[]       @relation("OAuthClientOwner")
+  sessions      Session[]
+  consents      UserConsent[]
+  owned_clients OAuthClient[] // Clientes OAuth2 que el usuario creó
 
-  @@index([email])
-  @@index([username])
   @@map("users")
 }
 
-// ============================================================================
-// SESSION MANAGEMENT
-// ============================================================================
-
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  expiresAt DateTime
-  userAgent String?
-  ipAddress String?
-  metadata  Json? // Flexible JSON for additional session data
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  user_id    String
+  expires_at DateTime
+  created_at DateTime @default(now())
 
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([expiresAt]) // For cleanup queries
+  @@index([user_id])
   @@map("sessions")
 }
 
-// ============================================================================
-// OAUTH2 CLIENT MANAGEMENT
-// ============================================================================
-
 model OAuthClient {
-  id           String   @id @default(cuid())
-  clientId     String   @unique
-  clientSecret String // Hashed in application layer
-  clientName   String
-  redirectUris String[] // Array of allowed redirect URIs
-  grantTypes   String[] // ['authorization_code', 'refresh_token']
-  isPublic     Boolean  @default(false) // PKCE required if true
-  isActive     Boolean  @default(true) // For soft delete
-
-  clientSecretOld String?   @map("client_secret_old") // Previous secret (hashed)
-  secretExpiresAt DateTime? @map("secret_expires_at") // When old secret expires
-
-  userId String // Owner of this OAuth client
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String     @id @default(uuid())
+  client_id          String     @unique
+  client_secret_hash String
+  client_type        ClientType @default(THIRD_PARTY) // NUEVO
+  owner_user_id      String? // NUEVO - NULL para clientes SYSTEM
+  is_deletable       Boolean    @default(true) // NUEVO
+  name               String
+  redirect_uris      String[] // Array de URIs permitidas
+  grant_types        String[] // ['authorization_code', 'refresh_token']
+  scopes             String[] // ['expenses.read', 'expenses.write', 'profile']
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+  deleted_at         DateTime? // Soft delete
 
   // Relations
-  authorizationCodes AuthorizationCode[]
-  userConsents       UserConsent[]
+  owner               User?               @relation(fields: [owner_user_id], references: [id], onDelete: SetNull)
+  authorization_codes AuthorizationCode[]
+  consents            UserConsent[]
 
-  owner User @relation("OAuthClientOwner", fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([clientId])
-  @@index([userId])
+  @@index([owner_user_id])
+  @@index([client_type])
+  @@index([deleted_at])
   @@map("oauth_clients")
 }
 
-// ============================================================================
-// AUTHORIZATION CODE FLOW
-// ============================================================================
-
 model AuthorizationCode {
-  id                  String    @id @default(cuid())
-  code                String    @unique
-  userId              String
-  clientId            String
-  redirectUri         String
-  codeChallenge       String // PKCE code challenge
-  codeChallengeMethod String // 'S256' or 'plain'
-  scope               String? // Requested scopes (space-separated)
-  state               String? // OAuth2 state parameter
-  expiresAt           DateTime
-  used                Boolean   @default(false)
-  usedAt              DateTime?
-  createdAt           DateTime  @default(now())
+  id                    String    @id @default(uuid())
+  code                  String    @unique
+  client_id             String
+  user_id               String
+  redirect_uri          String
+  scopes                String[]
+  code_challenge        String? // Para PKCE
+  code_challenge_method String? // 'S256' o 'plain'
+  expires_at            DateTime
+  created_at            DateTime  @default(now())
+  used_at               DateTime? // NULL si no ha sido usado
 
   // Relations
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  client OAuthClient @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
 
   @@index([code])
-  @@index([userId])
-  @@index([clientId])
-  @@index([expiresAt]) // For cleanup queries
+  @@index([client_id])
+  @@index([user_id])
+  @@index([expires_at])
   @@map("authorization_codes")
 }
 
-// ============================================================================
-// USER CONSENT MANAGEMENT
-// ============================================================================
-
 model UserConsent {
-  id        String    @id @default(uuid())
-  userId    String    @map("user_id")
-  clientId  String    @map("client_id")
-  scopes    String[]  @db.VarChar(50)
-  grantedAt DateTime  @default(now()) @map("granted_at")
-  expiresAt DateTime? @map("expires_at")
-  revokedAt DateTime? @map("revoked_at")
+  id         String   @id @default(uuid())
+  user_id    String
+  client_id  String
+  scopes     String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  user   User        @relation(fields: [userId], references: [id])
-  client OAuthClient @relation(fields: [clientId], references: [clientId])
+  // Relations
+  user   User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  client OAuthClient @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([clientId])
-  @@index([revokedAt])
+  @@unique([user_id, client_id])
+  @@index([user_id])
+  @@index([client_id])
   @@map("user_consents")
 }
 
-// ============================================================================
-// SCOPE DEFINITIONS
-// ============================================================================
-
 model ScopeDefinition {
-  id          String   @id @default(cuid())
-  name        String   @unique // 'read', 'write', 'admin'
-  description String // Human-readable description
-  isDefault   Boolean  @default(false) // Auto-granted on first consent
-  createdAt   DateTime @default(now())
+  id          String   @id @default(uuid())
+  scope       String   @unique
+  description String
+  created_at  DateTime @default(now())
 
-  @@index([name])
   @@map("scope_definitions")
 }

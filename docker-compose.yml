@@ -14,7 +14,7 @@ services:
     volumes:
       - oauth2_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U oauth2_user -d byteberry_oauth2_dev"]
+      test: [ "CMD-SHELL", "pg_isready -U oauth2_user -d byteberry_oauth2_dev" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,7 +35,7 @@ services:
       oauth2-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:4000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -46,7 +46,9 @@ volumes:
   oauth2_db_data:
   expenses_db_data:
 
+
 networks:
   byteberry-network:
+    external: true
     name: byteberry-network
     driver: bridge
