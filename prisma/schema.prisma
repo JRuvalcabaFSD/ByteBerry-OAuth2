@@ -71,6 +71,9 @@ model OAuthClient {
   updated_at         DateTime   @updatedAt
   deleted_at         DateTime? // Soft delete
 
+  client_Secret_Old String?   @map("client_secret_old") // Previous secret (hashed)
+  secret_Expires_At DateTime? @map("secret_expires_at") // When old secret expires
+
   // Relations
   owner               User?               @relation(fields: [owner_user_id], references: [id], onDelete: SetNull)
   authorization_codes AuthorizationCode[]

@@ -1,4 +1,4 @@
-import { ClientEntity } from '@domain';
+import { ClientEntity, ClientIdVO, UserIdVO } from '@domain';
 
 /**
  * Extends the global ServiceMap interface to include the IConfig interface.
@@ -14,58 +14,101 @@ declare module '@ServiceMap' {
 }
 
 /**
- * Interface for the OAuth client repository, defining methods for accessing and manipulating OAuth client entities.
- *
- * @remarks
- * This repository interface abstracts the data access layer for OAuth clients, providing methods to find, save, update, and soft-delete client records.
- *
- * @method findByClientId Retrieves an OAuth client entity by its client ID.
- * @param clientId - The unique client identifier.
- *
- * @method findById Retrieves an OAuth client entity by its unique ID.
- * @param Id - The unique identifier of the OAuth client.
- * @returns A promise that resolves to the OAuth client entity or null if not found.
- *
- * @method findByUserId Retrieves all actives OAuth client entities associated with a specific user ID.
- * @param userId - The user's unique identifier.
- * @returns A promise that resolves to an array of OAuth client entities.
- *
- * @method findAllByUserId Retrieves all OAuth client entities for a given user ID (including inactive).
- * @param userId - The user's unique identifier.
- * @returns A promise that resolves to an array of OAuth client entities.
- *
- * @method save Persists a new OAuth client entity.
- * @param client - The OAuth client entity to save.
- * @returns A promise that resolves when the operation is complete.
- *
- * @method update Updates an existing OAuth client entity.
- * @param client - The OAuth client entity to update.
- * @returns A promise that resolves when the operation is complete.
- *
- * @method softDelete Soft deletes an OAuth client entity.
- * @param id - The identifier of the OAuth client entity to soft delete.
- * @returns A promise that resolves when the operation is complete.
- *
- * @method existByClientId Checks if an OAuth client exists by its client ID.
- * @param clientId - The unique client identifier.
- * @returns A promise that resolves to true if the client exists, false otherwise.
- *
- * @method rotateSecret Rotates the client secret for a given OAuth client.
- * @param clientId - The unique client identifier.
- * @param newSecretHash - The hashed value of the new client secret.
- * @param oldSecretHash - The hashed value of the current client secret to be archived.
- * @param gracePeriodExpiration - The expiration date for the grace period during which both secrets are valid.
- * @returns A promise that resolves when the operation is complete.
+ * Interface for a repository that manages ClientEntity instances.
+ * Provides methods for querying, saving, updating, and deleting client data,
+ * typically used in an OAuth2 authorization server context.
  */
 
 export interface IClientRepository {
-	findByClientId(clientId: string): Promise<ClientEntity | null>;
+	/**
+	 * Finds a client entity by its client ID.
+	 * @param clientId - The unique identifier of the client.
+	 * @returns A promise that resolves to the ClientEntity if found, or null if not found.
+	 */
+
+	findByClientId(clientId: ClientIdVO): Promise<ClientEntity | null>;
+
+	/**
+	 * Finds a client entity by its internal ID.
+	 * @param Id - The internal unique identifier of the client.
+	 * @returns A promise that resolves to the ClientEntity if found, or null if not found.
+	 */
+
 	findById(Id: string): Promise<ClientEntity | null>;
-	findByUserId(userId: string): Promise<ClientEntity[]>;
-	findAllByUserId(userId: string): Promise<ClientEntity[]>;
-	save(client: ClientEntity): Promise<void>;
+
+	/**
+	 * Finds all client entities associated with a specific user ID.
+	 * @param userId - The unique identifier of the user.
+	 * @returns A promise that resolves to an array of ClientEntity instances.
+	 */
+
+	findByUserId(userId: UserIdVO): Promise<ClientEntity[]>;
+
+	/**
+	 * Finds all client entities associated with a specific user ID (alias for findByUserId).
+	 * @param userId - The unique identifier of the user.
+	 * @returns A promise that resolves to an array of ClientEntity instances.
+	 */
+
+	findAllByUserId(userId: UserIdVO): Promise<ClientEntity[]>;
+
+	/**
+	 * Saves a new client entity to the repository.
+	 * @param client - The ClientEntity to save.
+	 * @returns A promise that resolves when the save operation is complete.
+	 */
+
+	save(client: ClientEntity): Promise<ClientEntity>;
+
+	/**
+	 * Updates an existing client entity in the repository.
+	 * @param client - The ClientEntity to update.
+	 * @returns A promise that resolves when the update operation is complete.
+	 */
+
 	update(client: ClientEntity): Promise<void>;
-	softDelete(id: string): Promise<void>;
-	existByClientId(clientId: string): Promise<boolean>;
-	rotateSecret(clientId: string, newSecretHash: string, oldSecretHash: string, gracePeriodExpiration: Date): Promise<void>;
+
+	/**
+	 * Soft deletes a client entity by its ID (marks as deleted without removing from storage).
+	 * @param id - The internal unique identifier of the client.
+	 * @returns A promise that resolves when the soft delete operation is complete.
+	 */
+
+	softDelete(clientId: ClientIdVO): Promise<void>;
+
+	/**
+	 * Checks if a client exists by its client ID.
+	 * @param clientId - The unique identifier of the client.
+	 * @returns A promise that resolves to true if the client exists, false otherwise.
+	 */
+
+	existByClientId(clientId: ClientIdVO): Promise<boolean>;
+
+	/**
+	 * Rotates the secret for a client, updating it with a new hash while maintaining a grace period for the old hash.
+	 * @param clientId - The unique identifier of the client.
+	 * @param newSecretHash - The hash of the new secret.
+	 * @param oldSecretHash - The hash of the old secret.
+	 * @param gracePeriodExpiration - The date when the grace period for the old secret expires.
+	 * @returns A promise that resolves when the rotation is complete.
+	 */
+
+	rotateSecret(clientId: ClientIdVO, newSecretHash: string, oldSecretHash: string, gracePeriodExpiration: Date): Promise<void>;
+
+	/**
+	 * Finds all client entities owned by a specific owner ID.
+	 * @param ownerId - The unique identifier of the owner.
+	 * @returns A promise that resolves to an array of ClientEntity instances.
+	 */
+
+	findByOwnerId(ownerId: UserIdVO): Promise<ClientEntity[]>;
+
+	/**
+	 * Checks if a client is owned by a specific user.
+	 * @param clientId - The unique identifier of the client.
+	 * @param userId - The unique identifier of the user.
+	 * @returns A promise that resolves to true if the client is owned by the user, false otherwise.
+	 */
+
+	isOwnedBy(clientId: ClientIdVO, userId: UserIdVO): Promise<boolean>;
 }

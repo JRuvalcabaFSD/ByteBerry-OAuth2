@@ -103,10 +103,26 @@ class DatabaseConnectionError extends DatabaseError {
 
 export class ConflictError extends DatabaseError {
 	constructor(msg: string) {
-		super(msg, 'Registros duplicados');
+		super(msg, 'Duplicate records');
 		this.name = 'ConflictError';
 
 		Error.captureStackTrace(this, ConflictError);
+	}
+}
+
+/**
+ * Represents an error that occurs when attempting to persist invalid data to the database.
+ * This error is thrown to indicate that the data provided for persistence does not meet the required criteria.
+ *
+ * @extends DatabaseError
+ */
+
+export class InvalidPersisteError extends DatabaseError {
+	constructor(msg: string) {
+		super(msg, 'Invalid persist');
+		this.name = 'InvalidPersisteError';
+
+		Error.captureStackTrace(this, InvalidPersisteError);
 	}
 }
 
