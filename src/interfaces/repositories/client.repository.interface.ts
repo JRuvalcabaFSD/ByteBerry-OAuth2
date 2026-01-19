@@ -34,6 +34,10 @@ declare module '@ServiceMap' {
  * @param userId - The user's unique identifier.
  * @returns A promise that resolves to an array of OAuth client entities.
  *
+ * @method findBySystemRole Retrieves an OAuth client entity by its system role.
+ * @param role - The system role associated with the OAuth client.
+ * @returns A promise that resolves to the OAuth client entity or null if not found.
+ *
  * @method save Persists a new OAuth client entity.
  * @param client - The OAuth client entity to save.
  * @returns A promise that resolves when the operation is complete.
@@ -63,6 +67,7 @@ export interface IClientRepository {
 	findById(Id: string): Promise<ClientEntity | null>;
 	findByUserId(userId: string): Promise<ClientEntity[]>;
 	findAllByUserId(userId: string): Promise<ClientEntity[]>;
+	findBySystemRole(role: string): Promise<ClientEntity | null>;
 	save(client: ClientEntity): Promise<void>;
 	update(client: ClientEntity): Promise<void>;
 	softDelete(id: string): Promise<void>;

@@ -133,6 +133,23 @@ export class ClientRepository implements IClientRepository {
 		}
 	}
 
+	public async findBySystemRole(role: string): Promise<ClientEntity | null> {
+		try {
+			const client = await this.client.oAuthClient.findFirst({ where: { isSystemClient: true, systemRole: role } });
+
+			if (!client) {
+				this.logger.debug('System client not found by role', { role });
+				return null;
+			}
+
+			this.logger.debug('System client found by role', { role, clientId: client.clientId });
+			return clientMapper.toDomain(client);
+		} catch (error) {
+			this.logger.error('Failed to find system client by role', { role });
+			throw handledPrismaError(error);
+		}
+	}
+
 	/**
 	 * Saves a new OAuth client to the database.
 	 * @param client - The client entity to be saved

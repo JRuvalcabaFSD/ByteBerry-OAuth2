@@ -63,6 +63,15 @@ export class UpdateClientUseCase implements IUpdateClientUseCase {
 			throw new ForbiddenError('You do not have permission to update this client');
 		}
 
+		if (!existingClient.canBeModified()) {
+			this.logger.warn('Attempted to modify system client via API', {
+				userId,
+				clientId,
+				systemRole: existingClient.systemRole,
+			});
+			throw new ForbiddenError('System clients cannot be modified via API');
+		}
+
 		// 3. Create updated entity (immutable approach)
 		const updatedClient = ClientEntity.create({
 			...existingClient,

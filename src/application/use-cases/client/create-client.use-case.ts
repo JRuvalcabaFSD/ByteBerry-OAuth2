@@ -89,6 +89,8 @@ export class CreateClientUseCase implements ICreateClientUseCase {
 			isActive: true,
 			userId,
 			grantTypes: request.grantTypes ?? ['authorization_code', 'refresh_token'],
+			isSystemClient: false,
+			systemRole: undefined,
 		});
 
 		// Save to database

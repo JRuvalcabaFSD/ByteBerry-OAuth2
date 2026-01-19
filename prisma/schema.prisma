@@ -80,6 +80,10 @@ model OAuthClient {
   clientSecretOld String?   @map("client_secret_old") // Previous secret (hashed)
   secretExpiresAt DateTime? @map("secret_expires_at") // When old secret expires
 
+  // System Client Support (F2)
+  isSystemClient Boolean @default(false) @map("is_system_client") // Marks system-owned clients
+  systemRole     String? @map("system_role") // System role: 'bff', 'admin', etc.
+
   userId String // Owner of this OAuth client
 
   createdAt DateTime @default(now())
@@ -93,6 +97,7 @@ model OAuthClient {
 
   @@index([clientId])
   @@index([userId])
+  @@index([systemRole], map: "oauth_clients_system_role_idx")
   @@map("oauth_clients")
 }
 

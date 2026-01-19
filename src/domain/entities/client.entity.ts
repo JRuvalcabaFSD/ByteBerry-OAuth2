@@ -1,17 +1,20 @@
 /**
- * Represents the data structure for an OAuth client entity.
- *
- * @property id - Unique identifier for the OAuth client.
- * @property clientId - The client ID used for OAuth authentication.
- * @property clientSecret - The client secret used for OAuth authentication.
- * @property clientName - Human-readable name of the client.
- * @property redirectUris - List of allowed redirect URIs for the client.
- * @property grantTypes - Supported OAuth grant types for the client.
- * @property isPublic - Indicates if the client is public (does not require a secret).
- * @property isActive - Indicates if the client is currently active.
- * @property createdAt - Timestamp when the client was created.
- * @property updatedAt - Timestamp when the client was last updated.
- * @property userId - Identifier of the user who owns the client.
+ * Represents the data structure for an OAuth2 client entity.
+ * This interface defines the properties required to store and manage client information
+ * in the OAuth2 authorization server.
+ * @property {string} id - The unique identifier for the client.
+ * @property {string} clientId - The OAuth2 client identifier.
+ * @property {string} clientSecret - The OAuth2 client secret.
+ * @property {string} clientName - The human-readable name of the client.
+ * @property {string[]} redirectUris - The allowed redirect URIs for the client.
+ * @property {string[]} grantTypes - The supported grant types for the client.
+ * @property {boolean} isPublic - Indicates if the client is public (no secret required).
+ * @property {boolean} isActive - Indicates if the client is active and can be used.
+ * @property {Date} [createdAt] - The timestamp when the client was created.
+ * @property {Date} [updatedAt] - The timestamp when the client was last updated.
+ * @property {string} userId - The identifier of the user who owns the client.
+ * @property {boolean} isSystemClient - Indicates if this is a system-level client.
+ * @property {string} [systemRole] - The system role associated with the client, if applicable.
  */
 
 interface ClientData {
@@ -26,22 +29,30 @@ interface ClientData {
 	createdAt?: Date;
 	updatedAt?: Date;
 	userId: string;
+	isSystemClient: boolean;
+	systemRole?: string;
 }
 
 /**
- * Represents an OAuth client entity with properties and methods for managing OAuth clients.
+ * Represents an OAuth2 client entity in the system.
  *
- * This class encapsulates the data and behaviors associated with an OAuth client, including
- * identification, credentials, supported grant types, redirect URIs, and ownership.
+ * This class encapsulates the data and behavior of an OAuth2 client, including its configuration,
+ * ownership, and various validation methods. It follows the entity pattern with immutable properties
+ * and a factory method for creation.
  *
- * Instances of `OAuthClientEntity` are immutable and can only be created via the static `create` method,
- * which ensures default values for optional fields.
- *
- * @remarks
- * - Use `isOwnedBy` to check client ownership.
- * - Use `isValidRedirectUri` to validate redirect URIs.
- * - Use `supportsGrandType` to verify supported grant types.
- * - Use `toPublic` to obtain a representation without the client secret.
+ * @property {string} id - The unique identifier for the client.
+ * @property {string} clientId - The public client identifier used in OAuth2 flows.
+ * @property {string} clientSecret - The secret key for confidential clients (omitted in public representations).
+ * @property {string} clientName - The human-readable name of the client.
+ * @property {string[]} redirectUris - The list of allowed redirect URIs for authorization flows.
+ * @property {string[]} grantTypes - The supported OAuth2 grant types (e.g., "authorization_code", "client_credentials").
+ * @property {boolean} isPublic - Indicates if the client is public (true) or confidential (false).
+ * @property {boolean} isActive - Indicates if the client is active and can be used.
+ * @property {Date} createdAt - The timestamp when the client was created.
+ * @property {Date} updatedAt - The timestamp when the client was last updated.
+ * @property {string} userId - The ID of the user who owns this client.
+ * @property {boolean} isSystemClient - Indicates if this is a system-managed client.
+ * @property {string | undefined} systemRole - The role of the system client (e.g., "bff" for Backend for Frontend).
  */
 
 export class ClientEntity {
@@ -56,21 +67,17 @@ export class ClientEntity {
 	public readonly createdAt!: Date;
 	public readonly updatedAt!: Date;
 	public readonly userId!: string;
+	public readonly isSystemClient!: boolean;
+	public readonly systemRole?: string;
 
 	private constructor(data: ClientData) {
 		Object.assign(this, data);
 	}
 
 	/**
-	 * Creates a new instance of `OAuthClientEntity` using the provided parameters.
-	 *
-	 * Default values are assigned for optional fields:
-	 * - `isPublic` defaults to `false` if not specified.
-	 * - `isActive` defaults to `true` if not specified.
-	 * - `createdAt` and `updatedAt` default to the current date and time if not specified.
-	 *
-	 * @param params - The data required to create an OAuth client entity.
-	 * @returns A new `OAuthClientEntity` instance.
+	 * Creates a new ClientEntity instance with the provided parameters, applying default values for optional fields.
+	 * @param params - The data to initialize the client entity.
+	 * @returns A new ClientEntity instance.
 	 */
 
 	public static create(params: ClientData): ClientEntity {
@@ -80,6 +87,7 @@ export class ClientEntity {
 			...params,
 			isPublic: params.isPublic ?? false,
 			isActive: params.isActive ?? true,
+			isSystemClient: params.isSystemClient ?? false,
 			createdAt: params.createdAt ?? now,
 			updatedAt: params.updatedAt ?? now,
 		});
@@ -126,6 +134,73 @@ export class ClientEntity {
 
 	public supportsGrandType(grandType: string): boolean {
 		return this.grantTypes.includes(grandType);
+	}
+
+	/**
+	 * Checks if the client is a system client.
+	 * @returns True if the client is a system client, false otherwise.
+	 */
+
+	public isSystem(): boolean {
+		return this.isSystemClient;
+	}
+
+	/**
+	 * Determines if the client is a Backend for Frontend (BFF).
+	 * @returns {boolean} True if the client is a system client with the role 'bff', otherwise false.
+	 */
+
+	public isBFF(): boolean {
+		return this.isSystemClient && this.systemRole === 'bff';
+	}
+
+	/**
+	 * Determines if the client is external.
+	 * @returns True if the client is external (not a system client), false otherwise.
+	 */
+
+	public isExternal(): boolean {
+		return !this.isSystemClient;
+	}
+
+	/**
+	 * Determines whether the client requires user consent.
+	 * @returns {boolean} True if the client is not a system client, false otherwise.
+	 */
+
+	public requiresConsent(): boolean {
+		return !this.isSystemClient;
+	}
+
+	/**
+	 * Determines whether Proof Key for Code Exchange (PKCE) is required for this OAuth2 client.
+	 * PKCE is typically required for public clients to enhance security in the authorization code flow.
+	 *
+	 * @returns {boolean} True if PKCE is required (i.e., the client is public and not a system client), false otherwise.
+	 */
+
+	public requiresPKCE(): boolean {
+		if (!this.isSystemClient && this.isPublic) return true;
+
+		return false;
+	}
+
+	/**
+	 * Determines if the client can be deleted.
+	 * @returns {boolean} True if the client is not a system client, false otherwise.
+	 */
+
+	public canBeDeleted(): boolean {
+		return !this.isSystemClient;
+	}
+
+	/**
+	 * Determines whether the client can be modified.
+	 * @returns {boolean} True if the client is not a system client, false otherwise.
+	 */
+
+	public canBeModified(): boolean {
+		return !this.isSystemClient;
 	}
 
 	/**
