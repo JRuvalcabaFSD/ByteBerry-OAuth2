@@ -13,7 +13,7 @@ import { ValidateRequestError } from '@shared';
  * @property {string[]} grantTypes - Array of allowed OAuth2 grant types (e.g., 'authorization_code', 'client_credentials').
  * @property {boolean} isPublic - Indicates whether the client is public (true) or confidential (false).
  * @property {boolean} isActive - Indicates whether the client is currently active.
- * @property {string} userId - The ID of the user who owns/created this client.
+ * @property {string} [userId] - The ID of the user who owns/created this client (undefined for system clients).
  * @property {Date} createdAt - Timestamp when the client was created.
  * @property {Date} updatedAt - Timestamp when the client was last updated.
  */
@@ -26,7 +26,7 @@ interface Client {
 	grantTypes: string[];
 	isPublic: boolean;
 	isActive: boolean;
-	userId: string;
+	userId?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }

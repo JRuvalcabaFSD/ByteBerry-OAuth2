@@ -12,7 +12,7 @@
  * @property {boolean} isActive - Indicates if the client is active and can be used.
  * @property {Date} [createdAt] - The timestamp when the client was created.
  * @property {Date} [updatedAt] - The timestamp when the client was last updated.
- * @property {string} userId - The identifier of the user who owns the client.
+ * @property {string} [userId] - The identifier of the user who owns the client (undefined for system clients).
  * @property {boolean} isSystemClient - Indicates if this is a system-level client.
  * @property {string} [systemRole] - The system role associated with the client, if applicable.
  */
@@ -28,7 +28,7 @@ interface ClientData {
 	isActive: boolean;
 	createdAt?: Date;
 	updatedAt?: Date;
-	userId: string;
+	userId?: string;
 	isSystemClient: boolean;
 	systemRole?: string;
 }
@@ -50,7 +50,7 @@ interface ClientData {
  * @property {boolean} isActive - Indicates if the client is active and can be used.
  * @property {Date} createdAt - The timestamp when the client was created.
  * @property {Date} updatedAt - The timestamp when the client was last updated.
- * @property {string} userId - The ID of the user who owns this client.
+ * @property {string | undefined} userId - The ID of the user who owns this client (undefined for system clients).
  * @property {boolean} isSystemClient - Indicates if this is a system-managed client.
  * @property {string | undefined} systemRole - The role of the system client (e.g., "bff" for Backend for Frontend).
  */
@@ -66,7 +66,7 @@ export class ClientEntity {
 	public readonly isActive!: boolean;
 	public readonly createdAt!: Date;
 	public readonly updatedAt!: Date;
-	public readonly userId!: string;
+	public readonly userId?: string;
 	public readonly isSystemClient!: boolean;
 	public readonly systemRole?: string;
 

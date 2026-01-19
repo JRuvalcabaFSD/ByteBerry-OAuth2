@@ -84,7 +84,7 @@ model OAuthClient {
   isSystemClient Boolean @default(false) @map("is_system_client") // Marks system-owned clients
   systemRole     String? @map("system_role") // System role: 'bff', 'admin', etc.
 
-  userId String // Owner of this OAuth client
+  userId String? // Owner of this OAuth client (null for system clients)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,7 +93,7 @@ model OAuthClient {
   authorizationCodes AuthorizationCode[]
   userConsents       UserConsent[]
 
-  owner User @relation("OAuthClientOwner", fields: [userId], references: [id], onDelete: Cascade)
+  owner User? @relation("OAuthClientOwner", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([clientId])
   @@index([userId])

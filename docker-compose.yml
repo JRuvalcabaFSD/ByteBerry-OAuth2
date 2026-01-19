@@ -48,5 +48,6 @@ volumes:
 
 networks:
   byteberry-network:
+    external: true
     name: byteberry-network
     driver: bridge

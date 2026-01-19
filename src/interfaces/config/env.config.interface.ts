@@ -64,6 +64,12 @@ export interface IConfig extends HealthCheckable {
 	readonly databasePoolMin: number;
 	readonly databasePoolMax: number;
 
+	// System Clients
+	readonly bffClientId: string;
+	readonly bffClientSecret: string;
+	readonly bffClientName: string;
+	readonly bffClientRedirectUris: string[];
+
 	//Functions.
 	isDevelopment(): boolean;
 	isProduction(): boolean;

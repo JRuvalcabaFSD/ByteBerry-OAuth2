@@ -16,7 +16,11 @@ export class clientMapper {
 	 */
 
 	public static toDomain(record: OAuthClient): ClientEntity {
-		return ClientEntity.create({ ...record, systemRole: record.systemRole ?? undefined });
+		return ClientEntity.create({
+			...record,
+			userId: record.userId ?? undefined,
+			systemRole: record.systemRole ?? undefined,
+		});
 	}
 
 	/**
@@ -38,7 +42,7 @@ export class clientMapper {
 			isActive: entity.isActive,
 			isSystemClient: entity.isSystemClient,
 			systemRole: entity.systemRole ?? null,
-			userId: entity.userId,
+			userId: entity.userId ?? null,
 			createdAt: entity.createdAt,
 			updatedAt: entity.updatedAt,
 		};
