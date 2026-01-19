@@ -22,119 +22,225 @@ Servidor OAuth2 con Authorization Code + PKCE, JWT RS256, refresh tokens y JWKS.
 
 ## Flujos OAuth2
 
-### Login Flow
+### Arquitectura BFF (Backend for Frontend)
 
-Autenticacion de usuario y creacion de sesion.
+El sistema implementa el patron BFF donde el Frontend (SPA) nunca maneja tokens directamente. El BFF actua como cliente confidencial del servidor OAuth2 y gestiona los tokens de forma segura.
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Frontend   │────▶│     BFF     │────▶│   OAuth2    │     │  Expenses   │
+│    (SPA)    │◀────│   Server    │◀────│   Server    │     │     API     │
+└─────────────┘     └──────┬──────┘     └─────────────┘     └─────────────┘
+                           │                                       ▲
+                           │         Access Token (JWT)            │
+                           └───────────────────────────────────────┘
+```
+
+**Caracteristicas del BFF como System Client:**
+- Cliente confidencial (no publico) - no requiere PKCE
+- No requiere consentimiento del usuario (consent implicito)
+- Gestiona tokens en el servidor (el frontend solo usa cookies de sesion)
+- Soporta `authorization_code` y `refresh_token` grant types
+
+---
+
+### 1. Login Flow (Frontend → BFF → OAuth2)
+
+Inicio del flujo de autenticacion desde el Frontend.
 
 ```mermaid
 sequenceDiagram
     participant U as Usuario
-    participant B as Browser
-    participant S as OAuth2 Server
-    participant DB as Database
+    participant F as Frontend (SPA)
+    participant B as BFF Server
+    participant O as OAuth2 Server
 
-    U->>B: Accede a /auth/login
-    B->>S: GET /auth/login
-    S->>B: Render login form (EJS)
-    U->>B: Ingresa credenciales
-    B->>S: POST /auth/login
-    S->>DB: Validar credenciales
-    DB-->>S: Usuario encontrado
-    S->>S: Verificar password (bcrypt)
-    S->>S: Verificar cuenta activa
-    S->>DB: Crear sesion
-    DB-->>S: Session ID
-    S->>B: Set-Cookie: session_id + Redirect
-    B->>U: Usuario autenticado
+    U->>F: Click "Iniciar Sesion"
+    F->>B: GET /auth/login
+    B->>B: Generar state (CSRF protection)
+    B->>F: Redirect URL hacia OAuth2
+    F->>O: GET /auth/authorize
+    Note over F,O: client_id (BFF), redirect_uri,<br/>scope, state
+    O->>O: Validar client_id (BFF system client)
+    O->>O: Verificar session cookie
+    alt Sin sesion activa
+        O->>F: Redirect a /auth/login
+        F->>U: Mostrar formulario login OAuth2
+        U->>F: Ingresa credenciales
+        F->>O: POST /auth/login
+        O->>O: Validar credenciales
+        O->>O: Crear sesion
+        O->>F: Set-Cookie + Redirect a /auth/authorize
+    end
+    Note over O: BFF es system client<br/>NO requiere consent
+    O->>O: Generar authorization code
+    O->>F: Redirect a BFF callback?code=xxx&state=yyy
 ```
 
-### Authorization Flow
+---
 
-Flujo OAuth2 Authorization Code con PKCE.
+### 2. Token Exchange Flow (BFF ↔ OAuth2)
+
+El BFF intercambia el authorization code por tokens (el Frontend nunca ve los tokens).
 
 ```mermaid
 sequenceDiagram
-    participant C as Client App
-    participant B as Browser
-    participant S as OAuth2 Server
-    participant DB as Database
+    participant F as Frontend (SPA)
+    participant B as BFF Server
+    participant O as OAuth2 Server
+    participant DB as BFF Session Store
 
-    C->>B: Redirect a /auth/authorize
-    Note over C,B: client_id, redirect_uri, scope,<br/>code_challenge, state
-    B->>S: GET /auth/authorize
-    S->>S: Validar session cookie
-    alt Sin sesion
-        S->>B: Redirect a /auth/login?return_url=...
-    end
-    S->>DB: Validar client_id y redirect_uri
-    DB-->>S: Cliente valido
-    S->>DB: Verificar consent existente
-    alt Sin consent
-        S->>B: 200 {consentUrl: /auth/authorize/consent}
-        Note over B,S: Ver Consent Flow
-    end
-    S->>S: Generar authorization code
-    S->>DB: Guardar code + PKCE challenge
-    S->>B: Redirect a redirect_uri?code=xxx&state=yyy
-    B->>C: Authorization code recibido
+    F->>B: GET /auth/callback?code=xxx&state=yyy
+    B->>B: Validar state (CSRF)
+    B->>O: POST /auth/token
+    Note over B,O: grant_type: authorization_code<br/>code, client_id, client_secret,<br/>redirect_uri
+    O->>O: Validar client credentials (BFF)
+    O->>O: Validar authorization code
+    O->>O: Marcar code como usado
+    O->>O: Generar access_token (JWT RS256)
+    O->>O: Generar refresh_token
+    O-->>B: 200 {access_token, refresh_token, expires_in}
+    B->>DB: Guardar tokens en sesion servidor
+    B->>B: Crear sesion de usuario
+    B->>F: Set-Cookie: session_id (HttpOnly, Secure)
+    F->>F: Usuario autenticado
+    Note over F: Frontend NUNCA ve los tokens<br/>Solo tiene cookie de sesion
 ```
 
-### Consent Flow
+---
 
-Proceso de consentimiento del usuario para autorizar scopes.
+### 3. Protected Resource Access (Frontend → BFF → Expenses API)
+
+Acceso a recursos protegidos a traves del BFF.
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend (SPA)
+    participant B as BFF Server
+    participant E as Expenses API
+    participant O as OAuth2 Server
+
+    F->>B: GET /api/expenses
+    Note over F,B: Cookie: session_id
+    B->>B: Validar sesion
+    B->>B: Obtener access_token de sesion
+    B->>B: Verificar token no expirado
+    alt Token expirado
+        B->>O: POST /auth/token (refresh_token)
+        O-->>B: Nuevo access_token
+        B->>B: Actualizar token en sesion
+    end
+    B->>E: GET /expenses
+    Note over B,E: Authorization: Bearer {access_token}
+    E->>O: GET /.well-known/jwks.json
+    Note over E,O: Obtener public keys (cacheado)
+    E->>E: Validar JWT signature (RS256)
+    E->>E: Validar claims (iss, aud, exp)
+    E-->>B: 200 {expenses: [...]}
+    B-->>F: 200 {expenses: [...]}
+```
+
+---
+
+### 4. Token Refresh Flow (BFF → OAuth2)
+
+Renovacion automatica de tokens sin intervencion del usuario.
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend (SPA)
+    participant B as BFF Server
+    participant O as OAuth2 Server
+    participant DB as BFF Session Store
+
+    F->>B: Cualquier request API
+    B->>DB: Obtener tokens de sesion
+    B->>B: Verificar access_token expirado
+    alt Token expirado o proximo a expirar
+        B->>O: POST /auth/token
+        Note over B,O: grant_type: refresh_token<br/>refresh_token, client_id, client_secret
+        O->>O: Validar refresh_token
+        O->>O: Validar client credentials
+        O->>O: Generar nuevo access_token
+        O->>O: Rotar refresh_token (opcional)
+        O-->>B: 200 {access_token, refresh_token, expires_in}
+        B->>DB: Actualizar tokens en sesion
+    end
+    B->>B: Continuar con request original
+    Note over F: Proceso transparente<br/>Usuario no percibe renovacion
+```
+
+---
+
+### 5. Logout Flow (Frontend → BFF → OAuth2)
+
+Cierre de sesion completo en todos los servicios.
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend (SPA)
+    participant B as BFF Server
+    participant O as OAuth2 Server
+    participant DB as BFF Session Store
+
+    F->>B: POST /auth/logout
+    Note over F,B: Cookie: session_id
+    B->>DB: Obtener datos de sesion
+    B->>O: POST /auth/revoke (opcional)
+    Note over B,O: Revocar refresh_token
+    O-->>B: 200 OK
+    B->>DB: Eliminar sesion
+    B->>F: Clear-Cookie: session_id
+    F->>F: Redirect a pagina publica
+    Note over F: Sesion terminada en<br/>Frontend, BFF y OAuth2
+```
+
+---
+
+### Flujo Completo: Diagrama de Secuencia General
 
 ```mermaid
 sequenceDiagram
     participant U as Usuario
-    participant B as Browser
-    participant S as OAuth2 Server
-    participant DB as Database
+    participant F as Frontend
+    participant B as BFF
+    participant O as OAuth2
+    participant E as Expenses API
 
-    B->>S: GET /auth/authorize/consent
-    Note over B,S: client_id, scope, redirect_uri, state
-    S->>DB: Obtener info del cliente
-    DB-->>S: Nombre, scopes solicitados
-    S->>B: Render consent screen (EJS)
-    U->>B: Decide aprobar/denegar
-    B->>S: PUT /auth/authorize/decision
-    Note over B,S: decision: approve|deny
-    alt Usuario aprueba
-        S->>DB: Guardar consent (user, client, scopes)
-        S->>S: Generar authorization code
-        S->>DB: Guardar code + PKCE challenge
-        S->>B: Redirect a redirect_uri?code=xxx&state=yyy
-    else Usuario deniega
-        S->>B: Redirect a redirect_uri?error=access_denied
+    rect rgb(240, 248, 255)
+        Note over U,O: AUTENTICACION
+        U->>F: Acceder a la app
+        F->>B: Iniciar login
+        B->>F: Redirect a OAuth2
+        F->>O: /auth/authorize
+        O->>F: Login form
+        U->>O: Credenciales
+        O->>F: Redirect con code
+        F->>B: Callback con code
+        B->>O: Exchange code por tokens
+        O-->>B: access_token + refresh_token
+        B->>F: Cookie de sesion
     end
-```
 
-### Token Exchange Flow
+    rect rgb(240, 255, 240)
+        Note over F,E: USO DE LA APLICACION
+        U->>F: Ver gastos
+        F->>B: GET /api/expenses
+        B->>E: GET /expenses + Bearer token
+        E->>E: Validar JWT
+        E-->>B: Datos
+        B-->>F: Datos
+        F->>U: Mostrar gastos
+    end
 
-Intercambio del authorization code por access token con validacion PKCE.
-
-```mermaid
-sequenceDiagram
-    participant C as Client App
-    participant S as OAuth2 Server
-    participant DB as Database
-    participant JWT as JWT Service
-
-    C->>S: POST /auth/token
-    Note over C,S: code, client_id, redirect_uri,<br/>code_verifier
-    S->>DB: Buscar authorization code
-    DB-->>S: Code encontrado
-    S->>S: Validar code no expirado
-    S->>S: Validar code no usado
-    S->>S: Validar client_id coincide
-    S->>S: Validar redirect_uri coincide
-    S->>S: Verificar PKCE (S256)
-    Note over S: SHA256(code_verifier) == code_challenge
-    S->>DB: Marcar code como usado
-    S->>DB: Obtener datos del usuario
-    DB-->>S: User info
-    S->>JWT: Generar access token (RS256)
-    JWT-->>S: JWT firmado
-    S->>C: 200 {access_token, token_type, expires_in, scope}
+    rect rgb(255, 248, 240)
+        Note over F,O: RENOVACION DE TOKENS
+        F->>B: Otra peticion
+        B->>B: Token expirado?
+        B->>O: Refresh token
+        O-->>B: Nuevo access_token
+        B->>E: Continuar peticion
+    end
 ```
 
 ## Requisitos Previos

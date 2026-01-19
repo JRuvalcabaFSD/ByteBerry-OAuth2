@@ -53,8 +53,8 @@ export class AuthController {
 		try {
 			const userId = req.user!.userId;
 
-			const response = this.codeUseCase.execute(userId, request);
-			const redirectUri = (await response).buildRedirectURrl(request.redirectUri);
+			const response = await this.codeUseCase.execute(userId, request);
+			const redirectUri = response.buildRedirectURrl(request.redirectUri);
 
 			res.redirect(redirectUri);
 		} catch (error) {
@@ -67,6 +67,7 @@ export class AuthController {
 					clientId: request.clientId,
 					scopes: request.scope?.split(' ') || [],
 				});
+				return;
 			}
 			next(error);
 		}
