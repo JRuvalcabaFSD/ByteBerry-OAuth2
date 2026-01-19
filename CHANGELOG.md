@@ -1,3 +1,18 @@
+# [1.3.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.2.0...v1.3.0) (2026-01-19)
+
+
+### Features
+
+* add BFF_CLIENT_SECRET environment variable to CI workflows ([c563a32](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/c563a3285d7933508e44cf5cfa5574b2fbc010de))
+* add support for system clients and roles in the OAuthClient model ([d641b27](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/d641b2732cf7f41a9355719ca3dcab6f6f39c257))
+* agregar carpeta /docs al .gitignore y actualizar el título en README.md ([dccb869](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/dccb869b6012afa986cd60b2ee8b966b711decee))
+* agregar soporte para keyId en el servicio JWT y actualizar configuración de Docker ([bca7f03](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/bca7f03e5586c30e51dea2c53d014c509a332543))
+* make userId optional for system clients and add configuration for the BFF client ([1f2ecbc](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/1f2ecbc91d74791d0a7044a5f227ebf1cc537333))
+* **test:** add code authorization flow for system clients and integration testing ([8ed0483](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/8ed048319103134ed34e327513aae7f9998cdd20))
+* update dependency versions in pnpm-lock and pnpm-workspace ([0af62db](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/0af62db6d3a0a7bebf6115bc548db3c5efb7362d))
+* update Docker image tag to latest and improve shutdown configuration with DBConfig ([a214951](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/a2149513e9673e5f00a42dc5f7d9cdfee16b8250))
+* update documentation and logic in the consent and authorization flow ([d45da16](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/d45da16ff1575af152940adc2ca2f018d62d7e86))
+
 # [1.2.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.1.0...v1.2.0) (2026-01-12)
 
 
