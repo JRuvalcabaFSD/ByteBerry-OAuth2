@@ -31,6 +31,7 @@ describe('DeleteClientUseCase', () => {
 			userId: 'user-123',
 			isOwnedBy: vi.fn(),
 			isClientActive: vi.fn(),
+			canBeDeleted: vi.fn().mockReturnValue(true),
 		};
 
 		useCase = new DeleteClientUseCase(mockRepository, mockLogger);

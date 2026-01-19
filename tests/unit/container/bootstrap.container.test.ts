@@ -7,7 +7,8 @@ describe('Bootstrap Container', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		process.env.DATABASE_URL = "dummy"
-	});
+		});
+			process.env.BFF_CLIENT_SECRET = "12345678901234567890123456789012";
 
 	afterEach(() => {
 		vi.restoreAllMocks();

@@ -16,6 +16,7 @@ describe('configureShutdown', () => {
 	let mockLogger: ILogger;
 	let mockHttpServer: IHttpServer;
 	let mockCtxLogger: ILogger;
+	let mockDBConfig: any;
 
 	beforeEach(() => {
 		mockGShutdown = {
@@ -38,22 +39,27 @@ describe('configureShutdown', () => {
 			error: vi.fn(),
 		}as unknown as ILogger;
 
+		mockDBConfig = {
+			disconnect: vi.fn(),
+		};
+
 		(withLoggerContext as any).mockReturnValue(mockCtxLogger);
 	});
 
-	it('should configure shutdown and register HTTP server cleanup', () => {
-		const result = configureShutdown(mockGShutdown, mockLogger, mockHttpServer);
+	it('should configure shutdown and register DB and HTTP server cleanup', () => {
+		const result = configureShutdown(mockGShutdown, mockLogger, mockHttpServer, mockDBConfig);
 
 		expect(withLoggerContext).toHaveBeenCalledWith(mockLogger, 'configureShutdown');
 		expect(mockCtxLogger.debug).toHaveBeenCalledWith('Configuring graceful shutdown');
-		expect(mockGShutdown.registerCleanup).toHaveBeenCalledTimes(1);
+		expect(mockGShutdown.registerCleanup).toHaveBeenCalledTimes(2);
 		expect(result).toBe(mockGShutdown);
 	});
 
 	it('should execute cleanup successfully for HTTP server', async () => {
-		configureShutdown(mockGShutdown, mockLogger, mockHttpServer);
+		configureShutdown(mockGShutdown, mockLogger, mockHttpServer, mockDBConfig);
 
-		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[0][0];
+		// El segundo cleanup es el del HTTP server
+		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[1][0];
 		await cleanupFn();
 
 		expect(mockCtxLogger.debug).toHaveBeenCalledWith('Closing Http Server');
@@ -65,9 +71,9 @@ describe('configureShutdown', () => {
 		const error = new Error('Stop failed');
 		mockHttpServer.stop = vi.fn().mockRejectedValue(error);
 
-		configureShutdown(mockGShutdown, mockLogger, mockHttpServer);
+		configureShutdown(mockGShutdown, mockLogger, mockHttpServer, mockDBConfig);
 
-		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[0][0];
+		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[1][0];
 		await expect(cleanupFn()).rejects.toThrow(error);
 
 		expect(mockCtxLogger.debug).toHaveBeenCalledWith('Closing Http Server');
@@ -76,9 +82,9 @@ describe('configureShutdown', () => {
 	});
 
 	it('should not call stop if httpServer is null', async () => {
-		configureShutdown(mockGShutdown, mockLogger, null as any);
+		configureShutdown(mockGShutdown, mockLogger, null as any, mockDBConfig);
 
-		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[0][0];
+		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[1][0];
 		await cleanupFn();
 
 		expect(mockCtxLogger.debug).toHaveBeenCalledWith('Closing Http Server');
@@ -87,9 +93,9 @@ describe('configureShutdown', () => {
 
 	it('should not call stop if httpServer does not have stop method', async () => {
 		const mockHttpServerNoStop = {} as IHttpServer;
-		configureShutdown(mockGShutdown, mockLogger, mockHttpServerNoStop);
+		configureShutdown(mockGShutdown, mockLogger, mockHttpServerNoStop, mockDBConfig);
 
-		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[0][0];
+		const cleanupFn = (mockGShutdown.registerCleanup as any).mock.calls[1][0];
 		await cleanupFn();
 
 		expect(mockCtxLogger.debug).toHaveBeenCalledWith('Closing Http Server');

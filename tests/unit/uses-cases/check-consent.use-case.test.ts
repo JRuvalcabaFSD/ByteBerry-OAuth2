@@ -4,8 +4,10 @@ import type { IConsentRepository, ILogger } from '@interfaces';
 import { CheckConsentUseCase } from '@application';
 
 describe('CheckConsentUseCase', () => {
+
 	let useCase: CheckConsentUseCase;
 	let repository: Mocked<IConsentRepository>;
+	let clientRepository: any;
 	let logger: Mocked<ILogger>;
 
 	beforeEach(() => {
@@ -13,12 +15,16 @@ describe('CheckConsentUseCase', () => {
 			findByUserAndClient: vi.fn(),
 		} as any;
 
+		clientRepository = {
+			findByClientId: vi.fn().mockResolvedValue(null),
+		};
+
 		logger = {
 			debug: vi.fn(),
 			info: vi.fn(),
 		} as any;
 
-		useCase = new CheckConsentUseCase(repository, logger);
+		useCase = new CheckConsentUseCase(repository, clientRepository, logger);
 	});
 
 	it('should return false when no consent is found', async () => {
