@@ -35,6 +35,12 @@ export class Config implements IConfig {
 	readonly databasePoolMin: number;
 	readonly databasePoolMax: number;
 
+	// System Clients environments
+	readonly bffClientId: string;
+	readonly bffClientSecret: string;
+	readonly bffClientName: string;
+	readonly bffClientRedirectUris: string[];
+
 	constructor() {
 		try {
 			// ========================================
@@ -79,6 +85,16 @@ export class Config implements IConfig {
 			this.databaseUrl = env.get('DATABASE_URL').required().asString();
 			this.databasePoolMax = env.get('DATABASE_POOL_MIN').default('2').asIntPositive();
 			this.databasePoolMin = env.get('DATABASE_POOL_MAX').default('10').asIntPositive();
+
+			// ========================================
+			// System Clients environments
+			// ========================================
+			this.bffClientId = env.get('BFF_CLIENT_ID').default('byteberry-bff-client').asString();
+			this.bffClientName = env.get('BFF_CLIENT_NAME').default('ByteBerry BFF Client').asString();
+			this.bffClientRedirectUris = this.normalizeUrls(
+				env.get('BFF_CLIENT_REDIRECT_URIS').default('http://localhost:4003/auth/callback,http://localhost:5173/auth/callback').asArray(',')
+			);
+			this.bffClientSecret = env.get('BFF_CLIENT_SECRET').required().asString();
 		} catch (error) {
 			throw new ConfigError(`Failed to validate environment variables ${getErrMessage(error)}}`, this.generateContext());
 		}

@@ -80,6 +80,11 @@ export class ValidateClientUseCase implements IValidateClientUseCase {
 				throw new InvalidClientError('Unsupported grand type');
 			}
 
+			if (!client.isActive) {
+				this.logger.warn('Client inactive', { clientId: data.clientId, grandType: data.grantType });
+				throw new InvalidClientError('Client inactive');
+			}
+
 			//We return the validated client
 			const { clientId, clientName, isPublic, redirectUris, grantTypes } = client;
 

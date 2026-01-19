@@ -32,6 +32,36 @@ vi.mock('@container', () => ({
 			if (token === 'GracefulShutdown') {
 				return mockGShutdown;
 			}
+			if (token === 'ClientRepository') {
+				return {
+					findBySystemRole: vi.fn().mockResolvedValue(null),
+					save: vi.fn().mockResolvedValue(undefined),
+				};
+			}
+			if (token === 'HashService') {
+				return {
+					hashPassword: vi.fn().mockResolvedValue('hashed-secret'),
+					verifyPassword: vi.fn().mockResolvedValue(true),
+				};
+			}
+			if (token === 'Uuid') {
+				return {
+					generate: vi.fn().mockReturnValue('uuid-mock'),
+				};
+			}
+			if (token === 'Config') {
+				return {
+					bffClientSecret: '12345678901234567890123456789012',
+					bffClientId: 'bff-client-id',
+					bffClientName: 'BFF Client',
+					bffClientRedirectUris: ['http://localhost/callback'],
+				};
+			}
+			if (token === 'DBConfig') {
+				return {
+					testConnection: vi.fn().mockResolvedValue(undefined),
+				};
+			}
 			return {};
 		}),
 	})),

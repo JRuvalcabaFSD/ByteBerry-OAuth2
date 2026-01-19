@@ -12,7 +12,7 @@
 		"coverage": true,
 		"logs": true
 	},
-	"cSpell.words": ["SSSZ"],
+	"cSpell.words": ["keyid", "SSSZ"],
 	"files.associations": {
 		"*.css": "tailwindcss"
 	}

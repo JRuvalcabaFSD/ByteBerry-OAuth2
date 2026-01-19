@@ -1,3 +1,4 @@
+import { DBConfig } from '@config';
 import { GracefulShutdown } from '@infrastructure';
 import { IHttpServer, ILogger } from '@interfaces';
 import { getErrMessage, withLoggerContext } from '@shared';
@@ -18,26 +19,29 @@ import { getErrMessage, withLoggerContext } from '@shared';
  * ```
  */
 
-export function configureShutdown(GShutdown: GracefulShutdown, logger: ILogger, httpServer: IHttpServer): GracefulShutdown {
+export function configureShutdown(
+	GShutdown: GracefulShutdown,
+	logger: ILogger,
+	httpServer: IHttpServer,
+	DBConfig: DBConfig
+): GracefulShutdown {
 	const ctxLogger = withLoggerContext(logger, 'configureShutdown');
 
 	ctxLogger.debug('Configuring graceful shutdown');
 
-	// TODO F2
-	// //Register database server in cleanup function
-	// GShutdown.registerCleanup(async () => {
-	// 	ctxLogger.debug('Closing database connection');
+	//Register database server in cleanup function
+	GShutdown.registerCleanup(async () => {
+		ctxLogger.debug('Closing database connection');
 
-	// 	try {
-	// 		const DbConfig = container.resolve('DBConfig');
-	// 		if (DbConfig && typeof DbConfig.disconnect === 'function') {
-	// 			await DbConfig.disconnect();
-	// 		}
-	// 	} catch (error) {
-	// 		ctxLogger.error('Failed to stop Http Server', { error: getErrMsg(error) });
-	// 		throw error;
-	// 	}
-	// });
+		try {
+			if (DBConfig && typeof DBConfig.disconnect === 'function') {
+				await DBConfig.disconnect();
+			}
+		} catch (error) {
+			ctxLogger.error('Failed to disconnect from database', { error: getErrMessage(error) });
+			throw error;
+		}
+	});
 
 	//Register Http Service in cleanup function
 	GShutdown.registerCleanup(async () => {

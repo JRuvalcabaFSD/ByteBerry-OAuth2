@@ -32,6 +32,7 @@ describe('UpdateClientUseCase', () => {
 			grantTypes: ['authorization_code'],
 			isPublic: false,
 			isOwnedBy: vi.fn().mockReturnValue(true),
+			canBeModified: vi.fn().mockReturnValue(true),
 		};
 		const updateRequest: UpdateClientRequestDTO = {
 			clientName: 'New Name',
@@ -72,6 +73,7 @@ describe('UpdateClientUseCase', () => {
 			clientId,
 			userId: ownerId,
 			isOwnedBy: vi.fn().mockReturnValue(false),
+			canBeModified: vi.fn().mockReturnValue(true),
 		};
 		const updateRequest: UpdateClientRequestDTO = { clientName: 'New Name' };
 
@@ -96,6 +98,7 @@ describe('UpdateClientUseCase', () => {
 			grantTypes: ['authorization_code'],
 			isPublic: false,
 			isOwnedBy: vi.fn().mockReturnValue(true),
+			canBeModified: vi.fn().mockReturnValue(true),
 		};
 		const updateRequest: UpdateClientRequestDTO = { clientName: 'Updated Name' };
 
@@ -123,6 +126,7 @@ describe('UpdateClientUseCase', () => {
 			userId,
 			clientName: 'Old',
 			isOwnedBy: vi.fn().mockReturnValue(true),
+			canBeModified: vi.fn().mockReturnValue(true),
 		};
 		const updateRequest: UpdateClientRequestDTO = { clientName: 'New' };
 

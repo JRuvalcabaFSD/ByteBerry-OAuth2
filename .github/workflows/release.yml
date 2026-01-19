@@ -63,6 +63,7 @@ jobs:
       - name: 📝 Run full validation
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5433/byteberry_oauth2_test?schema=public
+          BFF_CLIENT_SECRET: "paXAD1X70fYdBDeyPagCwli+CSrF749bWlQbaFEk4UM="
         run: |
           export NODE_ENV=test
           export CI=true

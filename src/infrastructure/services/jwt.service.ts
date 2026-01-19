@@ -41,6 +41,7 @@ export class JwtService implements IJwtService {
 	private readonly issuer: string;
 	private readonly audience: string[];
 	private readonly accessTokenExpiration: number;
+	private readonly keyId: string;
 	private readonly algorithm = 'RS256';
 
 	constructor(
@@ -52,6 +53,7 @@ export class JwtService implements IJwtService {
 		this.publicKey = keyLoader.getPublicKey();
 		this.issuer = config.jwtIssuer;
 		this.audience = config.jwtAudience;
+		this.keyId = config.jwtKeyId;
 		this.accessTokenExpiration = config.jwtAccessTokenExpiresIn;
 	}
 	/**
@@ -88,7 +90,7 @@ export class JwtService implements IJwtService {
 			};
 
 			// Create and return the token
-			const token = jwt.sign(completePayload, this.privateKey, { algorithm: this.algorithm });
+			const token = jwt.sign(completePayload, this.privateKey, { algorithm: this.algorithm, keyid: this.keyId });
 
 			this.logger.debug('Access token generated', {
 				sub: payload.sub,

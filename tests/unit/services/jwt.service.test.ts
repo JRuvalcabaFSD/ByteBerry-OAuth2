@@ -27,6 +27,7 @@ describe('JwtService', () => {
 			jwtIssuer: 'test-issuer',
 			jwtAudience: ['test-audience'],
 			jwtAccessTokenExpiresIn: 3600,
+			jwtKeyId: 'test-key-id',
 		} as IConfig;
 
 		mockKeyLoader = {

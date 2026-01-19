@@ -3,6 +3,7 @@ import { bootstrapContainer } from '@container';
 import { IContainer, ILogger } from '@interfaces';
 import { configureShutdown, GracefulShutdown } from '@infrastructure';
 import { BootstrapError, getErrMessage, withLoggerContext } from '@shared';
+import { ensureSystemClients } from './ensure-system-clients.js';
 
 /**
  * Represents the result of the bootstrap process.
@@ -26,22 +27,27 @@ interface bootstrapResult {
  * @throws {AppError} If an application-specific error occurs during bootstrap.
  * @throws {BootstrapError} If any other error occurs during bootstrap, wrapped with additional context.
  */
-export async function bootstrap({ skipDbValidation = false } = {}): Promise<bootstrapResult> {
+export async function bootstrap({ skipDbValidation = false, skipSystemClients = false } = {}): Promise<bootstrapResult> {
 	let logger: ILogger | undefined;
 
 	try {
 		const container = bootstrapContainer();
 		const gracefulShutdown = container.resolve('GracefulShutdown');
 		const httpServer = container.resolve('HttpServer');
+		const DBConfig = container.resolve('DBConfig');
 
 		logger = withLoggerContext(container.resolve('Logger'), 'bootstrap');
 
 		logger.info('Service starting');
 
-		const shutdown = configureShutdown(gracefulShutdown, logger, httpServer);
+		const shutdown = configureShutdown(gracefulShutdown, logger, httpServer, DBConfig);
 
 		if (!skipDbValidation) {
 			await validateDbConnection(container, logger);
+		}
+
+		if (!skipSystemClients) {
+			await ensureSystemClientsBootstrap(container, logger);
 		}
 
 		await httpServer.start();
@@ -70,5 +76,38 @@ async function validateDbConnection(container: IContainer, logger: ILogger): Pro
 	} catch (error) {
 		ctxLogger.error('Database connection failed', { error: getErrMessage(error) });
 		throw new BootstrapError('Database connection failed', { error: getErrMessage(error) });
+	}
+}
+
+/**
+ * Ensures that system clients are bootstrapped in the OAuth2 system.
+ * This function resolves necessary dependencies from the container, such as the client repository,
+ * hash service, UUID generator, and configuration, then delegates to `ensureSystemClients` to
+ * create or verify the existence of system clients. It logs the process and throws a
+ * `BootstrapError` if the operation fails.
+ *
+ * @param container - The dependency injection container used to resolve services.
+ * @param logger - The logger instance for recording bootstrap progress and errors.
+ * @returns A promise that resolves when the system clients bootstrap is completed.
+ * @throws {BootstrapError} If the system clients bootstrap fails.
+ */
+
+async function ensureSystemClientsBootstrap(container: IContainer, logger: ILogger) {
+	const ctxLogger = withLoggerContext(logger, 'bootstrap.ensureSystemClients');
+
+	try {
+		ctxLogger.info('Ensuring system clients exist...');
+
+		const repository = container.resolve('ClientRepository');
+		const hashService = container.resolve('HashService');
+		const uuid = container.resolve('Uuid');
+		const config = container.resolve('Config');
+
+		await ensureSystemClients(repository, hashService, uuid, ctxLogger, config);
+
+		ctxLogger.info('System clients bootstrap completed');
+	} catch (error) {
+		ctxLogger.error('System clients bootstrap failed', { error: getErrMessage(error) });
+		throw new BootstrapError('System clients bootstrap failed', { error: getErrMessage(error) });
 	}
 }

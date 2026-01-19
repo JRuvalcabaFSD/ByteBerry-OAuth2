@@ -1,4 +1,4 @@
-import type { ICheckConsentUseCase, IConsentRepository, ILogger } from '@interfaces';
+import type { ICheckConsentUseCase, IClientRepository, IConsentRepository, ILogger } from '@interfaces';
 import { Injectable, LogContextClass, LogContextMethod } from '@shared';
 
 /**
@@ -13,10 +13,11 @@ import { Injectable, LogContextClass, LogContextMethod } from '@shared';
  */
 
 @LogContextClass()
-@Injectable({ name: 'CheckConsentUseCase', depends: ['ConsentRepository', 'Logger'] })
+@Injectable({ name: 'CheckConsentUseCase', depends: ['ConsentRepository', 'ClientRepository', 'Logger'] })
 export class CheckConsentUseCase implements ICheckConsentUseCase {
 	constructor(
-		private readonly repository: IConsentRepository,
+		private readonly consentRepository: IConsentRepository,
+		private readonly clientRepository: IClientRepository,
 		private readonly logger: ILogger
 	) {}
 
@@ -42,7 +43,11 @@ export class CheckConsentUseCase implements ICheckConsentUseCase {
 	public async execute(userId: string, clientId: string, requestedScopes?: string[]): Promise<boolean> {
 		this.logger.debug('Checking user consent', { userId, clientId, requestedScopes });
 
-		const consent = await this.repository.findByUserAndClient(userId, clientId);
+		const existClient = await this.clientRepository.findByClientId(clientId);
+
+		if (existClient?.isSystemClient) return true;
+
+		const consent = await this.consentRepository.findByUserAndClient(userId, clientId);
 
 		if (!consent) {
 			this.logger.debug('No consent found for user and client', { userId, clientId });

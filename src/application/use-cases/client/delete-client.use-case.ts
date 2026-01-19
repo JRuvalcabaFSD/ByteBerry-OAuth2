@@ -54,6 +54,15 @@ export class DeleteClientUseCase implements IDeleteClientUseCase {
 			throw new ForbiddenError('You do not have permission to delete this client');
 		}
 
+		if (!existingClient.canBeDeleted()) {
+			this.logger.warn('Attempted to delete system client via API', {
+				userId,
+				clientId,
+				systemRole: existingClient.systemRole,
+			});
+			throw new ForbiddenError('System clients cannot be deleted');
+		}
+
 		// Check if already deleted
 		if (!existingClient.isClientActive()) {
 			this.logger.debug('Client already inactive (soft deleted)', { userId, clientId });
