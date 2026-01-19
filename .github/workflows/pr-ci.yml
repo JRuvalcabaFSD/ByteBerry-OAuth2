@@ -22,6 +22,7 @@ concurrency:
 env:
   NODE_VERSION: "22.21.1"
   DATABASE_URL: "postgres://postgres:postgres@localhost:5433/byteberry_oauth2_test?schema=public"
+  BFF_CLIENT_SECRET: "paXAD1X70fYdBDeyPagCwli+CSrF749bWlQbaFEk4UM="
 
 jobs:
   setup:
@@ -298,6 +299,7 @@ jobs:
             -e PORT=4000 \
             -e LOG_LEVEL=info \
             -e DATABASE_URL=postgres://postgres:postgres@localhost:5433/byteberry_oauth2_test?schema=public \
+            -e BFF_CLIENT_SECRET=paXAD1X70fYdBDeyPagCwli+CSrF749bWlQbaFEk4UM= \
             -e RUN_MIGRATIONS=true \
             -e JWT_PRIVATE_KEY=dummy \
             -e JWT_PUBLIC_KEY=dummy \
