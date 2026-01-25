@@ -7,6 +7,8 @@ settings:
 overrides:
   diff@<8.0.3: '>=8.0.3'
   hono@<4.11.4: '>=4.11.4'
+  lodash-es@>=4.0.0 <=4.17.22: '>=4.17.23'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   tmp@<=0.2.3: '>=0.2.4'
   undici@<6.23.0: '>=6.23.0'
 
@@ -2841,8 +2843,8 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  lodash-es@4.17.22:
-    resolution: {integrity: sha512-XEawp1t0gxSi9x01glktRZ5HDy0HXqrM0x5pXQM98EaI0NxO6jVM7omDOxsuEo5UIASAnm2bRp1Jt/e0a2XU8Q==}
+  lodash-es@4.17.23:
+    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -2901,8 +2903,8 @@ packages:
   lodash.upperfirst@4.3.1:
     resolution: {integrity: sha512-sReKOYJIJf74dhJONhU4e0/shzi1trVbSWDOhKYE5XV2O+H7Sb2Dihwuc7xWxVl+DgFPyTqIN3zMfT9cq5iWDg==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+  lodash@4.17.23:
+    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -4489,12 +4491,12 @@ snapshots:
     dependencies:
       '@chevrotain/gast': 10.5.0
       '@chevrotain/types': 10.5.0
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   '@chevrotain/gast@10.5.0':
     dependencies:
       '@chevrotain/types': 10.5.0
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   '@chevrotain/types@10.5.0': {}
 
@@ -4814,7 +4816,7 @@ snapshots:
 
   '@jsdoc/salty@0.2.9':
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   '@mrleebo/prisma-ast@0.12.1':
     dependencies:
@@ -5143,7 +5145,7 @@ snapshots:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
       fs-extra: 11.3.3
-      lodash: 4.17.21
+      lodash: 4.17.23
       semantic-release: 25.0.2(typescript@5.9.3)
 
   '@semantic-release/commit-analyzer@13.0.1(semantic-release@25.0.2(typescript@5.9.3))':
@@ -5154,7 +5156,7 @@ snapshots:
       conventional-commits-parser: 6.2.1
       debug: 4.4.3
       import-from-esm: 2.0.0
-      lodash-es: 4.17.22
+      lodash-es: 4.17.23
       micromatch: 4.0.8
       semantic-release: 25.0.2(typescript@5.9.3)
     transitivePeerDependencies:
@@ -5171,7 +5173,7 @@ snapshots:
       debug: 4.4.3
       dir-glob: 3.0.1
       execa: 5.1.1
-      lodash: 4.17.21
+      lodash: 4.17.23
       micromatch: 4.0.8
       p-reduce: 2.1.0
       semantic-release: 25.0.2(typescript@5.9.3)
@@ -5191,7 +5193,7 @@ snapshots:
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       issue-parser: 7.0.1
-      lodash-es: 4.17.22
+      lodash-es: 4.17.23
       mime: 4.1.0
       p-filter: 4.1.0
       semantic-release: 25.0.2(typescript@5.9.3)
@@ -5209,7 +5211,7 @@ snapshots:
       env-ci: 11.2.0
       execa: 9.6.1
       fs-extra: 11.3.3
-      lodash-es: 4.17.22
+      lodash-es: 4.17.23
       nerf-dart: 1.0.0
       normalize-url: 8.1.1
       npm: 11.7.0
@@ -5230,7 +5232,7 @@ snapshots:
       get-stream: 7.0.1
       import-from-esm: 2.0.0
       into-stream: 7.0.0
-      lodash-es: 4.17.22
+      lodash-es: 4.17.23
       read-package-up: 11.0.0
       semantic-release: 25.0.2(typescript@5.9.3)
     transitivePeerDependencies:
@@ -5831,7 +5833,7 @@ snapshots:
 
   catharsis@0.9.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   chai@6.2.2: {}
 
@@ -5858,7 +5860,7 @@ snapshots:
       '@chevrotain/gast': 10.5.0
       '@chevrotain/types': 10.5.0
       '@chevrotain/utils': 10.5.0
-      lodash: 4.17.21
+      lodash: 4.17.23
       regexp-to-ast: 0.5.0
 
   chokidar@3.6.0:
@@ -5975,7 +5977,7 @@ snapshots:
       glob: 7.2.3
       inquirer: 8.2.5
       is-utf8: 0.2.1
-      lodash: 4.17.21
+      lodash: 4.17.23
       minimist: 1.2.7
       strip-bom: 4.0.0
       strip-json-comments: 3.1.1
@@ -6947,7 +6949,7 @@ snapshots:
       cli-width: 3.0.0
       external-editor: 3.1.0
       figures: 3.2.0
-      lodash: 4.17.21
+      lodash: 4.17.23
       mute-stream: 0.0.8
       ora: 5.4.1
       run-async: 2.4.1
@@ -7219,7 +7221,7 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
-  lodash-es@4.17.22: {}
+  lodash-es@4.17.23: {}
 
   lodash.camelcase@4.3.0: {}
 
@@ -7259,7 +7261,7 @@ snapshots:
 
   lodash.upperfirst@4.3.1: {}
 
-  lodash@4.17.21: {}
+  lodash@4.17.23: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -7919,7 +7921,7 @@ snapshots:
 
   requizzle@0.2.4:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   resolve-dir@1.0.1:
     dependencies:
@@ -8028,7 +8030,7 @@ snapshots:
       hook-std: 4.0.0
       hosted-git-info: 9.0.2
       import-from-esm: 2.0.0
-      lodash-es: 4.17.22
+      lodash-es: 4.17.23
       marked: 15.0.12
       marked-terminal: 7.3.0(marked@15.0.12)
       micromatch: 4.0.8
