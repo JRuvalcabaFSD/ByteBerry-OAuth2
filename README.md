@@ -17,6 +17,13 @@ Servidor OAuth2 con Authorization Code + PKCE, JWT RS256, refresh tokens y JWKS.
 - **Refresh Tokens** - Sesiones extendidas sin re-autenticacion
 - **JWKS Endpoint** - Distribucion de llaves publicas para validacion
 - **Clean Architecture** - Separacion clara de capas (domain, application, infrastructure)
+- **Account Types** - Soporte para usuarios User Account (Default) y Developer Account
+- **Consentimiento de Usuario** - Pantalla de consentimiento personalizable
+- **Rotacion de Secrets** - Rotacion segura de client secrets
+- **Testing Completo** - Tests unitarios e integracion con Vitest
+- **Logging con Winston** - Logs estructurados y niveles configurables
+- **Validacion con Zod** - Esquemas de validacion estricta para entradas
+- **Tailwind CSS** - Estilos utilitarios para interfaces limpias y responsivas
 - **PostgreSQL + Prisma** - Base de datos relacional con ORM tipado
 - **Docker Multi-arch** - Soporte para x64 y ARM64 (Raspberry Pi)
 

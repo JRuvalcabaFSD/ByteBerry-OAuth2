@@ -46,7 +46,9 @@ export async function bootstrap({ skipDbValidation = false, skipSystemClients = 
 			await validateDbConnection(container, logger);
 		}
 
-		if (!skipSystemClients) {
+		// Si estamos en entorno de test, omitimos la creación de system clients
+		const isTestEnv = process.env.NODE_ENV === 'test';
+		if (!skipSystemClients && !isTestEnv) {
 			await ensureSystemClientsBootstrap(container, logger);
 		}
 

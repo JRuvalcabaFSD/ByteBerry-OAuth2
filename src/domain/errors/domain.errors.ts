@@ -49,3 +49,20 @@ export class ValueObjectError extends AppError {
 		Error.captureStackTrace(this, ValueObjectError);
 	}
 }
+
+/**
+ * Represents an error related to domain entities.
+ *
+ * This error is thrown when there are issues with domain entities,
+ * such as validation failures or invalid states. It extends {@link AppError}
+ * and is categorized under the 'domain' type.
+ */
+
+export class EntityError extends AppError {
+	constructor(msg: string) {
+		super(msg, 'domain');
+		this.name = 'EntityError';
+
+		Error.captureStackTrace(this, EntityError);
+	}
+}

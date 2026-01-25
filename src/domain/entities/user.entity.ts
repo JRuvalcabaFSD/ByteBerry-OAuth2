@@ -1,18 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * Represents the properties of a user entity.
+ * Enumeration of possible account types for users in the system.
  *
- * @property id - Unique identifier for the user.
- * @property email - The user's email address.
- * @property username - The user's username, or null if not set.
- * @property passwordHash - The hashed password of the user.
- * @property fullName - The user's full name, or null if not set.
- * @property roles - An array of roles assigned to the user.
- * @property isActive - Indicates whether the user account is active.
- * @property emailVerified - Indicates whether the user's email has been verified.
- * @property createdAt - The date and time when the user was created.
- * @property updatedAt - The date and time when the user was last updated.
+ * - `USER`: Represents a standard user account with basic access.
+ * - `DEVELOPER`: Represents an account for developers with additional privileges.
+ * - `HYBRID`: Represents an account that combines features of both user and developer types.
  */
 
+import { EntityError } from '../errors/domain.errors.js';
+
+export enum AccountType {
+	USER = 'USER',
+	DEVELOPER = 'DEVELOPER',
+	HYBRID = 'HYBRID',
+}
+
+/**
+ * Represents the properties of a user entity in the system.
+ * This interface defines the structure for user data, including authentication,
+ * profile information, and feature access flags.
+ */
 interface UserProps {
 	id: string;
 	email: string;
@@ -22,48 +29,43 @@ interface UserProps {
 	roles: string[];
 	isActive: boolean;
 	emailVerified: boolean;
+	isDeveloper: boolean;
+	canUseExpenses: boolean;
+	developerEnabledAt: Date | null;
+	expensesEnabledAt: Date | null;
 	createdAt?: Date;
 	updatedAt?: Date;
 }
 
 /**
- * Represents a user within the system, encapsulating user-related properties and behaviors.
+ * Represents a user entity in the system, encapsulating user-related data and behaviors.
+ * This class enforces controlled instantiation through the static `create` method and provides
+ * methods for role checking, account type determination, and feature access control.
  *
- * The `UserEntity` class provides a domain model for user accounts, including identity, authentication,
- * authorization roles, and account status. It offers methods for password validation, role checking,
- * and generating a public representation of the user without sensitive information.
- *
- * Instances of `UserEntity` are immutable and should be created using the static `create` method.
- *
- * @remarks
- * - The password is stored as a hash in the `passwordHash` property.
- * - The class supports role-based access checks via `hasRole` and `hasAnyRoles`.
- * - The `toPublic` method returns a user object suitable for exposure in APIs, omitting sensitive data.
+ * @property {string} id - The unique identifier for the user.
+ * @property {string} email - The user's email address, normalized to lowercase and trimmed.
+ * @property {string | null} username - The user's username, optional.
+ * @property {string} passwordHash - The hashed password for authentication (excluded from public representations).
+ * @property {string | null} fullName - The user's full name, optional.
+ * @property {string[]} roles - An array of roles assigned to the user, defaults to ['user'].
+ * @property {boolean} isActive - Indicates if the user account is active, defaults to true.
+ * @property {boolean} emailVerified - Indicates if the user's email has been verified, defaults to false.
+ * @property {boolean} isDeveloper - Indicates if the user has developer access, defaults to false.
+ * @property {boolean} canUseExpenses - Indicates if the user can access expenses features, defaults to false.
+ * @property {Date | null} developerEnabledAt - The timestamp when developer access was enabled, null if not.
+ * @property {Date | null} expensesEnabledAt - The timestamp when expenses access was enabled, null if not.
+ * @property {Date} createdAt - The timestamp when the user was created.
+ * @property {Date} updatedAt - The timestamp when the user was last updated.
  *
  * @example
  * ```typescript
  * const user = UserEntity.create({
  *   id: '123',
  *   email: 'user@example.com',
- *   username: 'user123',
- *   passwordHash: 'hashedPassword',
- *   fullName: 'User Example',
- *   roles: ['user'],
- *   isActive: true,
- *   emailVerified: false,
- *   createdAt: new Date(),
- *   updatedAt: new Date(),
+ *   passwordHash: 'hashedpassword',
+ *   // other properties...
  * });
- *
- * if (user.validatePassword('plainPassword')) {
- *   // Password is valid
- * }
- *
- * if (user.hasRole('admin')) {
- *   // User is an admin
- * }
- *
- * const publicUser = user.toPublic();
+ * console.log(user.accountType); // AccountType.USER
  * ```
  */
 
@@ -76,6 +78,10 @@ export class UserEntity {
 	public readonly roles!: string[];
 	public readonly isActive!: boolean;
 	public readonly emailVerified!: boolean;
+	public readonly isDeveloper: boolean = false;
+	public readonly canUseExpenses: boolean = false;
+	public readonly developerEnabledAt!: Date | null;
+	public readonly expensesEnabledAt!: Date | null;
 	public readonly createdAt!: Date;
 	public readonly updatedAt!: Date;
 
@@ -91,17 +97,10 @@ export class UserEntity {
 	}
 
 	/**
-	 * Creates a new instance of the UserEntity with the provided properties.
+	 * Creates a new UserEntity instance with default values applied to optional properties.
 	 *
-	 * Normalizes and sets default values for certain fields:
-	 * - Converts the email to lowercase and trims whitespace.
-	 * - Sets `username` and `fullName` to `null` if not provided.
-	 * - Defaults `roles` to `['user']` if not specified.
-	 * - Defaults `isActive` to `true` and `emailVerified` to `false` if not specified.
-	 * - Sets `createdAt` and `updatedAt` to the current date if not provided.
-	 *
-	 * @param props - The properties required to create a UserEntity.
-	 * @returns A new UserEntity instance with normalized and defaulted properties.
+	 * @param props - The properties to initialize the UserEntity with.
+	 * @returns A new UserEntity instance.
 	 */
 
 	public static create(props: UserProps): UserEntity {
@@ -115,9 +114,26 @@ export class UserEntity {
 			roles: props.roles ?? ['user'],
 			isActive: props.isActive ?? true,
 			emailVerified: props.emailVerified ?? false,
+			isDeveloper: props.isDeveloper ?? false,
+			canUseExpenses: props.canUseExpenses ?? true,
+			developerEnabledAt: props.developerEnabledAt ?? null,
+			expensesEnabledAt: props.expensesEnabledAt ?? null,
 			createdAt: props.createdAt ?? now,
 			updatedAt: props.updatedAt ?? now,
 		} as UserEntity);
+	}
+
+	/**
+	 * Gets the account type based on the user's developer status and expense usage permissions.
+	 * Returns {@link AccountType.HYBRID} if the user is a developer and can use expenses,
+	 * {@link AccountType.DEVELOPER} if the user is a developer but cannot use expenses,
+	 * or {@link AccountType.USER} otherwise.
+	 */
+
+	public get accountType(): AccountType {
+		if (this.isDeveloper && this.canUseExpenses) return AccountType.HYBRID;
+		if (this.isDeveloper) return AccountType.DEVELOPER;
+		return AccountType.USER;
 	}
 
 	/**
@@ -161,6 +177,59 @@ export class UserEntity {
 	}
 
 	/**
+	 * Determines whether the user has permission to create clients.
+	 * @returns {boolean} True if the user is a developer, false otherwise.
+	 */
+
+	public canCreateClients(): boolean {
+		return this.isDeveloper;
+	}
+
+	/**
+	 * Checks if the user has access to expenses.
+	 * @returns {boolean} True if the user can access expenses, false otherwise.
+	 */
+
+	public canAccessExpenses(): boolean {
+		return this.canUseExpenses;
+	}
+
+	/**
+	 * Upgrades the user to developer status.
+	 *
+	 * This method sets the user's `isDeveloper` flag to true, records the timestamp when developer access was enabled,
+	 * and updates the `updatedAt` field. If the user already has developer access, it throws an `EntityError`.
+	 *
+	 * @throws {EntityError} If the user already has developer access.
+	 */
+
+	public upgradeToDeveloper(): void {
+		if (this.isDeveloper) throw new EntityError('User already has developer access');
+
+		const now = new Date();
+
+		(this as any).isDeveloper = true;
+		(this as any).developerEnabledAt = now;
+		(this as any).updatedAt = now;
+	}
+
+	/**
+	 * Enables expenses access for the user.
+	 * Throws an error if the user already has expenses access.
+	 * @throws {EntityError} If the user already has expenses access.
+	 */
+
+	public enableExpenses(): void {
+		if (this.canUseExpenses) throw new EntityError('User already has expenses access');
+
+		const now = new Date();
+
+		(this as any).canUseExpenses = true;
+		(this as any).expensesEnabledAt = now;
+		(this as any).updatedAt = now;
+	}
+
+	/**
 	 * Returns a public representation of the user by omitting the `passwordHash` property.
 	 * This method is useful for exposing user data without sensitive information.
 	 *
@@ -170,9 +239,9 @@ export class UserEntity {
 	 * const publicUser = user.toPublic();
 	 */
 
-	public toPublic(): Omit<UserProps, 'passwordHash'> {
+	public toPublic(): Omit<UserProps, 'passwordHash'> & { accountType: AccountType } {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { passwordHash, ...rest } = this;
-		return { ...rest };
+		return { ...rest, accountType: this.accountType };
 	}
 }

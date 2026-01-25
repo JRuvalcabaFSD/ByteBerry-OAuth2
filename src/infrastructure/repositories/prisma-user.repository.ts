@@ -138,7 +138,24 @@ export class UserRepository implements IUserRepository {
 	@LogContextMethod()
 	public async save(user: UserEntity): Promise<void> {
 		try {
-			await this.client.user.create({ data: { ...user } });
+			await this.client.user.create({
+				data: {
+					id: user.id,
+					email: user.email,
+					username: user.username,
+					passwordHash: user.passwordHash,
+					fullName: user.fullName,
+					roles: user.roles,
+					isActive: user.isActive,
+					emailVerified: user.emailVerified,
+					isDeveloper: user.isDeveloper,
+					canUseExpenses: user.canUseExpenses,
+					developerEnabledAt: user.developerEnabledAt,
+					expensesEnabledAt: user.expensesEnabledAt,
+					createdAt: user.createdAt,
+					updatedAt: user.updatedAt,
+				},
+			});
 			this.logger.debug('user creation successfully', { username: user.username });
 		} catch (error) {
 			this.logger.error('user creation failure', { username: user.username });
@@ -158,7 +175,25 @@ export class UserRepository implements IUserRepository {
 	@LogContextMethod()
 	public async update(user: UserEntity): Promise<void> {
 		try {
-			await this.client.user.update({ where: { id: user.id }, data: { ...user } });
+			await this.client.user.update({
+				where: { id: user.id },
+				data: {
+					id: user.id,
+					email: user.email,
+					username: user.username,
+					passwordHash: user.passwordHash,
+					fullName: user.fullName,
+					roles: user.roles,
+					isActive: user.isActive,
+					emailVerified: user.emailVerified,
+					isDeveloper: user.isDeveloper,
+					canUseExpenses: user.canUseExpenses,
+					developerEnabledAt: user.developerEnabledAt,
+					expensesEnabledAt: user.expensesEnabledAt,
+					createdAt: user.createdAt,
+					updatedAt: user.updatedAt,
+				},
+			});
 			this.logger.debug('User updated successfully', {
 				userId: user.id,
 				email: user.email,

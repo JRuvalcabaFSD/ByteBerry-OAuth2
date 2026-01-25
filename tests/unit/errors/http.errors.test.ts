@@ -6,7 +6,7 @@ import {
 	InvalidTokenError,
 	InvalidCreationTokenError,
 	InvalidClientError,
-	InvalidUser,
+	InvalidUserError,
 	InvalidCredentialsError,
 	LoginError,
 	InvalidSessionError,
@@ -212,7 +212,7 @@ describe("HTTP Errors", () => {
 
 		describe("InvalidUser", () => {
 			it("should create invalid user error", () => {
-				const error = new InvalidUser("User not found");
+				const error = new InvalidUserError("User not found");
 
 				expect(error).toBeInstanceOf(HttpError);
 				expect(error.name).toBe("InvalidUser");
@@ -320,7 +320,7 @@ describe("HTTP Errors", () => {
 				new InvalidTokenError("test"),
 				new InvalidCreationTokenError("test"),
 				new InvalidClientError("test"),
-				new InvalidUser("test"),
+				new InvalidUserError("test"),
 				new InvalidCredentialsError("test"),
 				new LoginError("test"),
 				new InvalidSessionError("test"),

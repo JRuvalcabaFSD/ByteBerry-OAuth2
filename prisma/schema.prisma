@@ -15,20 +15,35 @@ datasource db {
 }
 
 // ============================================================================
+// ACCOUNT TYPES
+// ============================================================================
+
+enum AccountType {
+  USER // Solo expenses tracking
+  DEVELOPER // Solo OAuth client creation
+  HYBRID // Ambas features habilitadas
+}
+
+// ============================================================================
 // USER MANAGEMENT
 // ============================================================================
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  username      String?  @unique
-  passwordHash  String
-  fullName      String?
-  roles         String[] // ['user', 'admin']
-  isActive      Boolean  @default(true)
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  username           String?   @unique
+  passwordHash       String
+  fullName           String?
+  roles              String[] // ['user', 'admin']
+  isActive           Boolean   @default(true)
+  emailVerified      Boolean   @default(false)
+  isDeveloper        Boolean   @default(false)
+  canUseExpenses     Boolean   @default(true)
+  developerEnabledAt DateTime?
+  expensesEnabledAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   sessions           Session[]
@@ -38,6 +53,8 @@ model User {
 
   @@index([email])
   @@index([username])
+  @@index([isDeveloper]) // ✅ Index para queries
+  @@index([canUseExpenses]) // ✅ Index para queries
   @@map("users")
 }
 

@@ -4,8 +4,14 @@ import * as Controllers from '@presentation';
 import * as Routes from '@presentation';
 
 import { Injectable } from '@shared';
-import type { HomeResponse, IClock, IConfig, IHealthService, ILogger, ISessionRepository } from '@interfaces';
-import { createSessionMiddleware, createUserRoutes, RedirectToLoginErrorHandle, UnAuthorizedErrorHandle } from '@presentation';
+import type { HomeResponse, IClock, IConfig, IHealthService, ILogger, ISessionRepository, IUserRepository } from '@interfaces';
+import {
+	createSessionMiddleware,
+	createDeveloperMiddleware,
+	createUserRoutes,
+	RedirectToLoginErrorHandle,
+	UnAuthorizedErrorHandle,
+} from '@presentation';
 import { createClientRoutes } from './client.routes.js';
 
 /**
@@ -28,6 +34,7 @@ declare module '@ServiceMap' {
 		'Config',
 		'Clock',
 		'SessionRepository',
+		'UserRepository',
 		'Logger',
 		'HealthService',
 		'LoginController',
@@ -45,6 +52,7 @@ export class AppRouter {
 		private readonly config: IConfig,
 		private readonly clock: IClock,
 		private readonly sessionRepository: ISessionRepository,
+		private readonly userRepository: IUserRepository,
 		private readonly logger: ILogger,
 		private readonly heathService: IHealthService,
 		private readonly loginCtl: Controllers.LoginController,
@@ -84,9 +92,10 @@ export class AppRouter {
 		const requireSessionRedirect = createSessionMiddleware(this.sessionRepository, this.logger, {
 			onError: new RedirectToLoginErrorHandle(),
 		});
+		const requireDeveloper = createDeveloperMiddleware(this.userRepository, this.logger);
 
 		// Client
-		this.router.use('/client', requireSession, createClientRoutes(this.clientCtl));
+		this.router.use('/client', requireSession, requireDeveloper, createClientRoutes(this.clientCtl));
 
 		// User
 		this.router.use('/user', createUserRoutes(this.userCtl, requireSession));
@@ -150,6 +159,8 @@ export class AppRouter {
 			{ name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
 			{ name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
 			{ name: 'listConsents', value: `${baseUrl}/user/me/consents`, method: 'PUT' },
+			{ name: 'updateToDeveloper', value: `${baseUrl}/user/me/upgrade/developer`, method: 'PUT' },
+			{ name: 'enableExpenses', value: `${baseUrl}/user/me/upgrade/expenses`, method: 'PUT' },
 			// Client
 			{ name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
 			{ name: 'listClients', value: `${baseUrl}/client`, method: 'GET' },

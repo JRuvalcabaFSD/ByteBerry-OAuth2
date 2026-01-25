@@ -8,6 +8,8 @@ declare module '@ServiceMap' {
 		UpdateUserUseCase: IUpdateUserUseCase;
 		UpdatePasswordUseCase: IUpdatePasswordUseCase;
 		DeleteConsentUseCase: IDeleteConsentUseCase;
+		UpgradeToDeveloperUseCase: IUpgradeToDeveloperUseCase;
+		EnableExpensesUseCase: IEnableExpensesUseCase;
 	}
 }
 
@@ -91,4 +93,36 @@ export interface IUpdatePasswordUseCase {
 
 export interface IDeleteConsentUseCase {
 	execute(userId: string, consentId: string): Promise<void>;
+}
+
+/**
+ * Use case interface for upgrading a user to developer status.
+ *
+ * @remarks
+ * Implementations of this interface should handle the logic required to upgrade
+ * a user, identified by their unique ID, to a developer role or status within the system.
+ *
+ * @method execute
+ * @param userId - The unique identifier of the user to be upgraded.
+ * @returns A promise that resolves to a {@link Dtos.UserResponseDTO} containing the updated user information.
+ */
+
+export interface IUpgradeToDeveloperUseCase {
+	execute(userId: string): Promise<Dtos.UserResponseDTO>;
+}
+
+/**
+ * Use case interface for enabling expenses for a user.
+ *
+ * @remarks
+ * This interface defines the contract for enabling expenses functionality,
+ * typically used to allow a user to start tracking or managing expenses within the system.
+ *
+ * @method execute
+ * @param userId - The unique identifier of the user for whom expenses are to be enabled.
+ * @returns A promise that resolves to a {@link Dtos.UserResponseDTO} containing the updated user information.
+ */
+
+export interface IEnableExpensesUseCase {
+	execute(userId: string): Promise<Dtos.UserResponseDTO>;
 }

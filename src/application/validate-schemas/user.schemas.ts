@@ -18,6 +18,7 @@ export interface RegisterUserRequestData {
 	password: string;
 	fullName?: string;
 	ipAddress?: string;
+	accountType?: 'user' | 'developer';
 }
 
 /**
@@ -79,6 +80,7 @@ export const UserRegisterSchema: z.ZodType<RegisterUserRequestData> = z.object({
 	password: requiredString('Password').pipe(maxMinString({ field: 'Password', min: 6, max: 24 })),
 	fullName: z.string().trim().max(100, 'Full name must be 100 characters or less').optional(),
 	ipAddress: ipString('ipAddress').optional(),
+	accountType: z.enum(['user', 'developer']).optional().default('user'),
 });
 
 /**
