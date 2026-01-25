@@ -67,7 +67,7 @@ export class EnableExpensesUseCase implements IEnableExpensesUseCase {
 				error: error instanceof Error ? error.message : 'Unknown error',
 			});
 
-			if (error instanceof EntityError) throw new InvalidUserError(getErrMessage(error));
+			if (error instanceof EntityError) throw new InvalidUserError(getErrMessage(error), 400);
 			throw error;
 		}
 

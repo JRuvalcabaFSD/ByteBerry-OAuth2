@@ -227,8 +227,8 @@ export class InvalidClientError extends HttpError {
  */
 
 export class InvalidUserError extends HttpError {
-	constructor(msg: string) {
-		super(msg, 'oauth', 'Invalid user', 401);
+	constructor(msg: string, statusCode: number = 401) {
+		super(msg, 'oauth', 'Invalid user', statusCode);
 
 		this.name = 'InvalidUser';
 

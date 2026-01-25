@@ -164,7 +164,7 @@ export class ExchangeTokenUseCase implements Interfaces.IExchangeTokenUseCase {
 				this.logger.error('User not found for authorization code', {
 					userId: authCode.userId,
 				});
-				throw new Errors.InvalidUserError('User not found for authorization code');
+				throw new Errors.InvalidUserError('User not found for authorization code', 400);
 			}
 
 			if (!user.canLogin()) {
