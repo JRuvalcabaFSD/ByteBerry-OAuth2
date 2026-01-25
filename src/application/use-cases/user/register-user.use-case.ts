@@ -96,6 +96,9 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
 		//encrypt password
 		const passwordHash = await this.hashService.hashPassword(request.password);
 
+		const accountType = request.accountType || 'user';
+		const now = new Date();
+
 		const user = UserEntity.create({
 			id: this.uuid.generate(),
 			email: request.email,
@@ -105,6 +108,10 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
 			roles: [this.DEFAULT_USER_ROLE],
 			isActive: true,
 			emailVerified: false,
+			isDeveloper: accountType === 'developer',
+			canUseExpenses: accountType === 'user',
+			developerEnabledAt: accountType === 'developer' ? now : null,
+			expensesEnabledAt: accountType === 'user' ? now : null,
 		});
 
 		//Save user in db
