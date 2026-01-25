@@ -10,21 +10,6 @@ import {
 	UserRegisterSchema,
 } from '@application';
 
-/**
- * Represents a user in the system.
- *
- * @interface User
- * @property {string} id - The unique identifier of the user.
- * @property {string} email - The email address of the user.
- * @property {string | null} username - The username of the user. May be null if not set.
- * @property {string | null} fullName - The full name of the user. May be null if not provided.
- * @property {string[]} roles - An array of role identifiers assigned to the user.
- * @property {boolean} isActive - Indicates whether the user account is currently active.
- * @property {boolean} emailVerified - Indicates whether the user's email address has been verified.
- * @property {Date} createdAt - The timestamp when the user account was created.
- * @property {Date} updatedAt - The timestamp when the user account was last updated.
- */
-
 interface User {
 	id: string;
 	email: string;
@@ -33,6 +18,11 @@ interface User {
 	roles: string[];
 	isActive: boolean;
 	emailVerified: boolean;
+	accountType: string;
+	isDeveloper: boolean;
+	canUseExpenses: boolean;
+	developerEnabledAt: Date | null;
+	expensesEnabledAt: Date | null;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -180,6 +170,7 @@ export class RegisterUserRequestDTO {
 	public readonly password!: string;
 	public readonly fullName?: string;
 	public readonly ipAddress?: string;
+	public readonly accountType?: 'user' | 'developer';
 
 	private constructor(data: RegisterUserRequestData) {
 		Object.assign(this, data);

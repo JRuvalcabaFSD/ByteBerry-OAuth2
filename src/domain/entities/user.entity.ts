@@ -239,7 +239,7 @@ export class UserEntity {
 	 * const publicUser = user.toPublic();
 	 */
 
-	public toPublic(): Omit<UserProps, 'passwordHash'> {
+	public toPublic(): Omit<UserProps, 'passwordHash'> & { accountType: AccountType } {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { passwordHash, ...rest } = this;
 		return { ...rest, accountType: this.accountType };
