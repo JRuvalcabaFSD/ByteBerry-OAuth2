@@ -82,7 +82,7 @@ export class ExchangeTokenUseCase implements Interfaces.IExchangeTokenUseCase {
 	 * @returns A promise that resolves to a TokenResponseDTO containing the access token, expiration time, and scope
 	 * @throws {Errors.InvalidCodeError} If the authorization code is invalid, expired, already used, or PKCE verification fails
 	 * @throws {Errors.InvalidClientError} If the client ID doesn't match the authorization code's client ID
-	 * @throws {Errors.InvalidUser} If the user associated with the authorization code is not found
+	 * @throws {Errors.InvalidUserError} If the user associated with the authorization code is not found
 	 * @throws {Errors.InvalidCreationTokenError} If an unexpected error occurs during token generation
 	 */
 
@@ -164,7 +164,7 @@ export class ExchangeTokenUseCase implements Interfaces.IExchangeTokenUseCase {
 				this.logger.error('User not found for authorization code', {
 					userId: authCode.userId,
 				});
-				throw new Errors.InvalidUser('User not found for authorization code');
+				throw new Errors.InvalidUserError('User not found for authorization code');
 			}
 
 			if (!user.canLogin()) {

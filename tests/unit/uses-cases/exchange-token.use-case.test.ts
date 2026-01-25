@@ -173,7 +173,7 @@ describe('ExchangeTokenUseCase', () => {
 			mockCodeRepository.findByCode = vi.fn().mockResolvedValue(mockAuthCode);
 			mockUserRepository.findById = vi.fn().mockResolvedValue(null);
 
-			await expect(useCase.execute(validRequest)).rejects.toThrow(Errors.InvalidUser);
+			await expect(useCase.execute(validRequest)).rejects.toThrow(Errors.InvalidUserError);
 		});
 
 		it('should mark authorization code as used after successful exchange', async () => {

@@ -8,6 +8,7 @@ declare module '@ServiceMap' {
 		UpdateUserUseCase: IUpdateUserUseCase;
 		UpdatePasswordUseCase: IUpdatePasswordUseCase;
 		DeleteConsentUseCase: IDeleteConsentUseCase;
+		UpgradeToDeveloperUseCase: IUpgradeToDeveloperUseCase;
 	}
 }
 
@@ -91,4 +92,20 @@ export interface IUpdatePasswordUseCase {
 
 export interface IDeleteConsentUseCase {
 	execute(userId: string, consentId: string): Promise<void>;
+}
+
+/**
+ * Use case interface for upgrading a user to developer status.
+ *
+ * @remarks
+ * Implementations of this interface should handle the logic required to upgrade
+ * a user, identified by their unique ID, to a developer role or status within the system.
+ *
+ * @method execute
+ * @param userId - The unique identifier of the user to be upgraded.
+ * @returns A promise that resolves to a {@link Dtos.UserResponseDTO} containing the updated user information.
+ */
+
+export interface IUpgradeToDeveloperUseCase {
+	execute(userId: string): Promise<Dtos.UserResponseDTO>;
 }

@@ -226,13 +226,13 @@ export class InvalidClientError extends HttpError {
  * @param msg - A descriptive error message.
  */
 
-export class InvalidUser extends HttpError {
+export class InvalidUserError extends HttpError {
 	constructor(msg: string) {
 		super(msg, 'oauth', 'Invalid user', 401);
 
 		this.name = 'InvalidUser';
 
-		Error.captureStackTrace(this, InvalidUser);
+		Error.captureStackTrace(this, InvalidUserError);
 	}
 }
 
