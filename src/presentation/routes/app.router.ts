@@ -150,6 +150,8 @@ export class AppRouter {
 			{ name: 'update', value: `${baseUrl}/user/me`, method: 'PUT' },
 			{ name: 'updatePassword', value: `${baseUrl}/user/me/password`, method: 'PUT' },
 			{ name: 'listConsents', value: `${baseUrl}/user/me/consents`, method: 'PUT' },
+			{ name: 'updateToDeveloper', value: `${baseUrl}/user/me/upgrade/developer`, method: 'PUT' },
+			{ name: 'enableExpenses', value: `${baseUrl}/user/me/upgrade/expenses`, method: 'PUT' },
 			// Client
 			{ name: 'createClient', value: `${baseUrl}/client`, method: 'POST' },
 			{ name: 'listClients', value: `${baseUrl}/client`, method: 'GET' },

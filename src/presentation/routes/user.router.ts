@@ -8,6 +8,8 @@ export function createUserRoutes(controller: UserController, requireSession: Req
 	router.put('/me', requireSession, controller.updateMe);
 	router.get('/me', requireSession, controller.getMe);
 	router.put('/me/password', requireSession, controller.updatePassword);
+	router.put('/me/upgrade/developer', requireSession, controller.upgradeToDeveloper);
+	router.put('/me/upgrade/expenses', requireSession, controller.enableExpenses);
 	router.get('/me/consents', requireSession, controller.listConsents);
 	router.delete('/me/consents/:id', requireSession, controller.revokeConsent);
 	return router;
