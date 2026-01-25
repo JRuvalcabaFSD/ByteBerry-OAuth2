@@ -48,6 +48,8 @@ declare module '@ServiceMap' {
 		'UpdatePasswordUseCase',
 		'ListConsentsUseCase',
 		'DeleteConsentUseCase',
+		'UpgradeToDeveloperUseCase',
+		'EnableExpensesUseCase',
 	],
 })
 export class UserController {
@@ -57,7 +59,9 @@ export class UserController {
 		private readonly updateUserUseCase: UseCases.IUpdateUserUseCase,
 		private readonly updatePasswordUseCase: UseCases.IUpdatePasswordUseCase,
 		private readonly listConsentUseCase: UseCases.IListClientUseCase,
-		private readonly deleteConsentUseCase: UseCases.IDeleteClientUseCase
+		private readonly deleteConsentUseCase: UseCases.IDeleteClientUseCase,
+		private readonly upgradeToDeveloperUseCase: UseCases.IUpgradeToDeveloperUseCase,
+		private readonly enableExpensesUseCase: UseCases.IEnableExpensesUseCase
 	) {}
 
 	/**
@@ -199,6 +203,60 @@ export class UserController {
 			await this.deleteConsentUseCase.execute(userId, consentId);
 
 			res.status(204).send();
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	/**
+	 * Upgrades the authenticated user to a developer role.
+	 *
+	 * This controller method invokes the `upgradeToDeveloperUseCase` to enable developer features
+	 * for the current user. On success, it returns a JSON response with a success message and the updated user data.
+	 * If an error occurs, it forwards the error to the next middleware.
+	 *
+	 * @param req - Express request object, expected to have `user` with a `userId` property.
+	 * @param res - Express response object used to send the JSON response.
+	 * @param next - Express next function for error handling.
+	 * @returns A promise that resolves when the response is sent or an error is forwarded.
+	 */
+
+	public upgradeToDeveloper = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user!.userId;
+			const response = await this.upgradeToDeveloperUseCase.execute(userId);
+
+			res.status(200).json({
+				message: 'Developer factures enabled successfully',
+				user: response.toJSON().user,
+			});
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	/**
+	 * Enables the expenses feature for the authenticated user.
+	 *
+	 * @param req - Express request object, expected to have a `user` property with a `userId`.
+	 * @param res - Express response object used to send the result.
+	 * @param next - Express next function for error handling.
+	 * @returns A promise that resolves when the operation is complete.
+	 *
+	 * @remarks
+	 * Responds with a 200 status and a JSON object containing a success message and the updated user information.
+	 * Passes any errors to the next middleware.
+	 */
+
+	public enableExpenses = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.user!.userId;
+			const response = await this.enableExpensesUseCase.execute(userId);
+
+			res.status(200).json({
+				message: 'Expenses feature enabled successfully',
+				user: response.toJSON().user,
+			});
 		} catch (error) {
 			next(error);
 		}
