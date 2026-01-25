@@ -1,3 +1,23 @@
+# [1.4.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.3.0...v1.4.0) (2026-01-25)
+
+
+### Features
+
+* add account type handling in user registration process ([15a42f5](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/15a42f55cf20a8afc398f0963832ff2c0f9f17b5)), closes [#54](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/54)
+* add AccountType enum and enhance UserEntity with developer and expenses features ([10362b9](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/10362b9103d30d25a92f6e6e80be64b9d0270a78)), closes [#52](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/52)
+* add developer credentials to login view and implement account type flows ([1beb960](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/1beb9606e5605067d74066917d9e4739bd475f30)), closes [#63](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/63) [#64](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/64) [#65](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/65)
+* add developer middleware to restrict access to developer routes ([d8bdcbf](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/d8bdcbff1df4926c21bf0fa211667f178cef9274)), closes [#58](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/58)
+* add enable expenses use case and update related interfaces and schemas ([20b3f8e](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/20b3f8e422fe7627144c80c8d30cce7adbf76467)), closes [#57](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/57)
+* add routes for upgrading to developer and enabling expenses in UserController ([694ff9f](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/694ff9f008fd9aeca72751cd4f4d227b5e0c5f90)), closes [#60](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/60)
+* add upgrade to developer and enable expenses methods in UserController ([1098c72](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/1098c72f52f5c11d11d75d1959e43d0241b1ed06))
+* add upgrade to developer use case and refactor error handling for invalid user ([a754c78](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/a754c78cc66beab29f5a9ea96f15633ef0067f19)), closes [#56](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/56)
+* **prisma:** add account type enum and extend user model with new fields ([14a78a9](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/14a78a9f102a8705039815c6611622dc951f6b22)), closes [#50](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/50)
+* **prisma:** remove accountType from User model and add indexes for isDeveloper and canUseExpenses ([a12b0d8](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/a12b0d8930e15df3f2003fd023f7bca049b8a7ce))
+* refactor save and update methods to explicitly define user fields in Prisma operations ([ff66677](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/ff66677daa5412d6551fee8e2eea4449936060c1)), closes [#55](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/55)
+* rename middleware function and integrate it into AppRouter for developer access ([7305a15](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/7305a1563760a5fdbf8f17547cac8b7f7996e60e)), closes [#61](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/61) [#62](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/62)
+* update lodash and lodash-es to version 4.17.23 in pnpm-lock.yaml ([58e57f8](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/58e57f8bd28727b23e0034dabdf98b045492ae0b))
+* update User interface and UserEntity to include account type and related properties ([65eadb2](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/commit/65eadb214b476a51fb9bc08a5cbc853715356755)), closes [#53](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/issues/53)
+
 # [1.3.0](https://github.com/JRuvalcabaFSD/ByteBerry-OAuth2/compare/v1.2.0...v1.3.0) (2026-01-19)
 
 
