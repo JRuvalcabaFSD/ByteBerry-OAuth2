@@ -16,7 +16,7 @@ import { NextFunction, Request, RequestHandler, Response } from 'express';
  * @returns An Express `RequestHandler` that enforces developer access.
  */
 
-export function createRequireDeveloperMiddleware(repository: IUserRepository, logger: ILogger): RequestHandler {
+export function createDeveloperMiddleware(repository: IUserRepository, logger: ILogger): RequestHandler {
 	const ctxLogger = withLoggerContext(logger, 'createRequireDeveloperMiddleware');
 	return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
