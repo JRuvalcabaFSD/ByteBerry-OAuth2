@@ -28,6 +28,7 @@ export * from './use-cases/user/register-user.use-case.js';
 export * from './use-cases/user/update-password.use-case.js';
 export * from './use-cases/user/update-user.use-case.js';
 export * from './use-cases/user/upgrade-to-developer.use-case.js';
+export * from './use-cases/user/enable-expenses.use-case.js';
 
 //Validate Schemas
 export * from './validate-schemas/auth.schemas.js';

@@ -9,6 +9,7 @@ declare module '@ServiceMap' {
 		UpdatePasswordUseCase: IUpdatePasswordUseCase;
 		DeleteConsentUseCase: IDeleteConsentUseCase;
 		UpgradeToDeveloperUseCase: IUpgradeToDeveloperUseCase;
+		EnableExpensesUseCase: IEnableExpensesUseCase;
 	}
 }
 
@@ -107,5 +108,21 @@ export interface IDeleteConsentUseCase {
  */
 
 export interface IUpgradeToDeveloperUseCase {
+	execute(userId: string): Promise<Dtos.UserResponseDTO>;
+}
+
+/**
+ * Use case interface for enabling expenses for a user.
+ *
+ * @remarks
+ * This interface defines the contract for enabling expenses functionality,
+ * typically used to allow a user to start tracking or managing expenses within the system.
+ *
+ * @method execute
+ * @param userId - The unique identifier of the user for whom expenses are to be enabled.
+ * @returns A promise that resolves to a {@link Dtos.UserResponseDTO} containing the updated user information.
+ */
+
+export interface IEnableExpensesUseCase {
 	execute(userId: string): Promise<Dtos.UserResponseDTO>;
 }
