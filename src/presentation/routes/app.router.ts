@@ -94,9 +94,14 @@ export class AppRouter {
 			{ onError: new UnAuthorizedErrorHandle() },
 			this.config.sessionCookieName
 		);
-		const requireSessionRedirect = createSessionMiddleware(this.sessionRepository, this.logger, {
-			onError: new RedirectToLoginErrorHandle(),
-		});
+		const requireSessionRedirect = createSessionMiddleware(
+			this.sessionRepository,
+			this.logger,
+			{
+				onError: new RedirectToLoginErrorHandle(),
+			},
+			this.config.sessionCookieName
+		);
 		const requireDeveloper = createDeveloperMiddleware(this.userRepository, this.logger);
 
 		// Client
