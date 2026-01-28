@@ -28,9 +28,10 @@ interface SessionMiddlewareOptions {
 export function createSessionMiddleware(
 	repository: ISessionRepository,
 	logger: ILogger,
-	options: SessionMiddlewareOptions
+	options: SessionMiddlewareOptions,
+	cookieName?: string
 ): RequestHandler {
-	const COOKIE_NAME = 'session_id';
+	const COOKIE_NAME: string = cookieName ?? 'session_id';
 	const { onError } = options;
 
 	return async (req: Request, res: Response, next: NextFunction): Promise<void> => {

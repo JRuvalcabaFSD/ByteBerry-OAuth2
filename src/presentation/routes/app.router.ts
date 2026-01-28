@@ -88,7 +88,12 @@ export class AppRouter {
 	private setupRoutes(): void {
 		const baseurl = `${this.config.serviceUrl}:${this.config.port}`;
 
-		const requireSession = createSessionMiddleware(this.sessionRepository, this.logger, { onError: new UnAuthorizedErrorHandle() });
+		const requireSession = createSessionMiddleware(
+			this.sessionRepository,
+			this.logger,
+			{ onError: new UnAuthorizedErrorHandle() },
+			this.config.sessionCookieName
+		);
 		const requireSessionRedirect = createSessionMiddleware(this.sessionRepository, this.logger, {
 			onError: new RedirectToLoginErrorHandle(),
 		});
