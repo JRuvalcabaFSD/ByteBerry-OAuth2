@@ -22,24 +22,31 @@ export class Config implements IConfig {
 
 	//JWT environments
 	public readonly jwtKeyId: string;
-	readonly jwtIssuer: string;
-	readonly jwtAudience: string[];
-	readonly jwtAccessTokenExpiresIn: number;
+	public readonly jwtIssuer: string;
+	public readonly jwtAudience: string[];
+	public readonly jwtAccessTokenExpiresIn: number;
 
 	//Security environments
-	readonly corsOrigins: string[];
-	readonly bcryptRounds: number;
+	public readonly corsOrigins: string[];
+	public readonly bcryptRounds: number;
 
 	//Database environments
-	readonly databaseUrl: string;
-	readonly databasePoolMin: number;
-	readonly databasePoolMax: number;
+	public readonly databaseUrl: string;
+	public readonly databasePoolMin: number;
+	public readonly databasePoolMax: number;
 
 	// System Clients environments
-	readonly bffClientId: string;
-	readonly bffClientSecret: string;
-	readonly bffClientName: string;
-	readonly bffClientRedirectUris: string[];
+	public readonly bffClientId: string;
+	public readonly bffClientSecret: string;
+	public readonly bffClientName: string;
+	public readonly bffClientRedirectUris: string[];
+
+	// Cookies environment
+	public readonly cookieMaxAge: number;
+	public readonly sessionCookieName: string;
+	public readonly cookieHttpOnly: boolean;
+	public readonly cookieSameSite: 'strict' | 'lax' | 'none';
+	public readonly cookieDomain: string;
 
 	constructor() {
 		try {
@@ -95,6 +102,15 @@ export class Config implements IConfig {
 				env.get('BFF_CLIENT_REDIRECT_URIS').default('http://localhost:4003/auth/callback,http://localhost:5173/auth/callback').asArray(',')
 			);
 			this.bffClientSecret = env.get('BFF_CLIENT_SECRET').required().asString();
+
+			// ========================================
+			// System Clients environments
+			// ========================================
+			this.cookieDomain = env.get('COOKIE_DOMAIN').default('localhost').asString();
+			this.cookieHttpOnly = env.get('COOKIE_HTTP_ONLY').default('true').asBool();
+			this.cookieSameSite = env.get('COOKIE_SAME_SITE').default('lax').asEnum(['strict', 'lax', 'none']);
+			this.sessionCookieName = env.get('SESSION_COOKIE_NAME').default('byteberry_session_OAuth').asString();
+			this.cookieMaxAge = env.get('COOKIE_MAX_AGE').default('3600000').asIntPositive();
 		} catch (error) {
 			throw new ConfigError(`Failed to validate environment variables ${getErrMessage(error)}}`, this.generateContext());
 		}

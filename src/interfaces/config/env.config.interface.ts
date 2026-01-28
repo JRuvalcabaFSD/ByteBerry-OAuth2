@@ -70,6 +70,13 @@ export interface IConfig extends HealthCheckable {
 	readonly bffClientName: string;
 	readonly bffClientRedirectUris: string[];
 
+	// Cookies
+	readonly sessionCookieName: string;
+	readonly cookieHttpOnly: boolean;
+	readonly cookieSameSite: 'strict' | 'lax' | 'none';
+	readonly cookieDomain: string;
+	readonly cookieMaxAge: number;
+
 	//Functions.
 	isDevelopment(): boolean;
 	isProduction(): boolean;

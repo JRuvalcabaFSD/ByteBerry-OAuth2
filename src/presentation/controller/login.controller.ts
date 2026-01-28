@@ -22,15 +22,19 @@ declare module '@ServiceMap' {
 @Injectable({ name: 'LoginController', depends: ['Logger', 'Config', 'LoginUseCase'] })
 export class LoginController {
 	// TODO Pasar por env
-	private readonly COOKIE_NAME = 'session_id';
-	private readonly COOKIE_MAX_AGE = 3600000; // 1 hour in milliseconds
-	private readonly COOKIE_MAX_AGE_EXTENDED = 30 * 24 * 3600000; // 30 days in milliseconds
+	private readonly COOKIE_NAME: string = 'session_id';
+	private readonly COOKIE_MAX_AGE: number = 3600000; // 1 hour in milliseconds
+	private readonly COOKIE_MAX_AGE_EXTENDED: number = 30 * 24 * 3600000; // 30 days in milliseconds
 
 	constructor(
 		private readonly logger: ILogger,
 		private readonly config: IConfig,
 		private readonly useCase: ILoginUseCase
-	) {}
+	) {
+		this.COOKIE_NAME = this.config.sessionCookieName;
+		this.COOKIE_MAX_AGE = this.config.cookieMaxAge;
+		this.COOKIE_MAX_AGE_EXTENDED = 30 * 24 * this.config.cookieMaxAge;
+	}
 
 	public getLoginForm = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
@@ -65,9 +69,9 @@ export class LoginController {
 			const cookieMaxAge = request.rememberMe ? this.COOKIE_MAX_AGE_EXTENDED : this.COOKIE_MAX_AGE;
 
 			res.cookie(this.COOKIE_NAME, response.sessionId, {
-				httpOnly: true,
+				httpOnly: this.config.cookieHttpOnly,
 				secure: this.config.isProduction(),
-				sameSite: 'lax',
+				sameSite: this.config.cookieSameSite,
 				maxAge: cookieMaxAge,
 				path: '/',
 			});
