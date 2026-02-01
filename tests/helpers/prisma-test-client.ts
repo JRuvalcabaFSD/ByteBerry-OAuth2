@@ -7,10 +7,10 @@
  * @module tests/helpers/prisma-test-client
  */
 
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-import { execSync } from 'child_process';
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { execSync } from "child_process";
 
 /**
  * Singleton instance - UNA SOLA para todos los tests
@@ -27,7 +27,7 @@ export async function getPrismaTestClient(): Promise<PrismaClient> {
 
 		if (!databaseUrl) {
 			throw new Error(
-				'DATABASE_URL no está definida. Asegúrate de tener .env.test configurado'
+				"DATABASE_URL no está definida. Asegúrate de tener .env.test configurado",
 			);
 		}
 
@@ -52,16 +52,17 @@ export async function getPrismaTestClient(): Promise<PrismaClient> {
 		// Ejecutar migraciones
 		try {
 			const env = { ...process.env, DATABASE_URL: databaseUrl };
-			execSync('npx prisma migrate deploy', {
-				stdio: 'pipe',
+			execSync("npx prisma migrate deploy", {
+				stdio: "pipe",
 				env,
+				timeout: 30000, // 30 seconds timeout
 			});
-			console.log('✅ Migraciones ejecutadas correctamente');
+			console.log("✅ Migraciones ejecutadas correctamente");
 		} catch (error) {
-			console.warn('⚠️  Error al ejecutar migraciones:', error);
+			console.warn("⚠️  Error al ejecutar migraciones:", error);
 		}
 
-		console.log('✅ PrismaClient singleton creado para tests');
+		console.log("✅ PrismaClient singleton creado para tests");
 	}
 
 	return prismaInstance;
@@ -74,12 +75,12 @@ export async function closePrismaTestClient(): Promise<void> {
 	if (prismaInstance) {
 		await prismaInstance.$disconnect();
 		prismaInstance = null;
-		console.log('✅ PrismaClient singleton cerrado');
+		console.log("✅ PrismaClient singleton cerrado");
 	}
 
 	if (poolInstance) {
 		await poolInstance.end();
 		poolInstance = null;
-		console.log('✅ PostgreSQL pool cerrado');
+		console.log("✅ PostgreSQL pool cerrado");
 	}
 }

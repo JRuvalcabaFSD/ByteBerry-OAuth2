@@ -28,6 +28,7 @@ describe('JwtService', () => {
 			jwtAudience: ['test-audience'],
 			jwtAccessTokenExpiresIn: 3600,
 			jwtKeyId: 'test-key-id',
+			serviceName: 'test-service',
 		} as IConfig;
 
 		mockKeyLoader = {
@@ -74,7 +75,7 @@ describe('JwtService', () => {
 			const decoded = jwt.decode(token) as any;
 
 			expect(decoded.iss).toBe('test-issuer');
-			expect(decoded.aud).toEqual(['test-audience']);
+			expect(decoded.aud).toEqual(['test-service', 'test-audience']);
 		});
 
 		it('should include iat and exp claims', () => {

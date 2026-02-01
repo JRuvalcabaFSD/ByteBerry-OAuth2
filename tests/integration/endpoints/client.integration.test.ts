@@ -13,6 +13,7 @@ import {
 	seedTestDatabaseWithDeveloperAndClient,
 } from "../../helpers/database-helper.js";
 import { TestServer } from "../../helpers/test-server.js";
+import { getTestAccessToken } from "../../helpers/fixtures-helper.js";
 
 describe("Client Endpoints - Integration Tests", () => {
 	let prisma: PrismaClient;
@@ -21,7 +22,8 @@ describe("Client Endpoints - Integration Tests", () => {
 	let testUserEmail: string;
 	let testUserPassword: string;
 	let testUserId: string;
-	let authCookies: string[];
+	let testClientId: string;
+	let accessToken: string;
 
 	beforeAll(async () => {
 		prisma = await getPrismaTestClient();
@@ -36,19 +38,15 @@ describe("Client Endpoints - Integration Tests", () => {
 		testUserEmail = seed.testUser.email;
 		testUserPassword = seed.testUser.passwordPlain;
 		testUserId = seed.testUser.id;
+		testClientId = seed.testClient.clientId;
 
-		// Login and get auth cookies
-		const loginResponse = await request(app)
-			.post("/auth/login")
-			.send({
-				emailOrUserName: testUserEmail,
-				password: testUserPassword,
-				rememberMe: false,
-			})
-			.expect(200);
-
-		authCookies =
-			(loginResponse.headers["set-cookie"] as unknown as string[]) ?? [];
+		// Get JWT access token via OAuth2 flow
+		accessToken = await getTestAccessToken(
+			app,
+			prisma,
+			testUserId,
+			testClientId,
+		);
 	});
 
 	afterAll(async () => {
@@ -70,7 +68,7 @@ describe("Client Endpoints - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(201);
 
@@ -105,7 +103,7 @@ describe("Client Endpoints - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(201);
 
@@ -123,7 +121,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(201);
 
@@ -151,7 +149,7 @@ describe("Client Endpoints - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData);
 
 			expect(response.status).toBe(400);
@@ -171,7 +169,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(400);
 		});
@@ -186,7 +184,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(400);
 		});
@@ -226,7 +224,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.get("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - ListClientResponseDTO.toJSON() returns { clients: Array<ClientObject> }
@@ -246,26 +244,26 @@ describe("Client Endpoints - Integration Tests", () => {
 		});
 
 		it("should return empty array when user has no clients", async () => {
-			// Note: Using seedTestDatabaseWithDeveloper for this test to start with clean clients
+			// Note: Using seedTestDatabaseWithDeveloperAndClient for this test to start with clean clients
 			// Re-setup for this specific test
 			await cleanDatabase(prisma);
-			const seed = await seedTestDatabaseWithDeveloper(prisma);
-			const loginResponse = await request(app)
-				.post("/auth/login")
-				.send({
-					emailOrUserName: seed.testUser.email,
-					password: seed.testUser.passwordPlain,
-					rememberMe: false,
-				})
-				.expect(200);
+			const seed = await seedTestDatabaseWithDeveloperAndClient(prisma);
+			const testAccessToken = await getTestAccessToken(
+				app,
+				prisma,
+				seed.testUser.id,
+				seed.testClient.clientId,
+			);
 
-			const testCookies =
-				(loginResponse.headers["set-cookie"] as unknown as string[]) ?? [];
+			// Delete the created client so we have no clients
+			await prisma.oAuthClient.deleteMany({
+				where: { userId: seed.testUser.id },
+			});
 
 			// Act
 			const response = await request(app)
 				.get("/client")
-				.set("Cookie", testCookies)
+				.set("Authorization", `Bearer ${testAccessToken}`)
 				.expect(200);
 
 			// Assert
@@ -300,7 +298,7 @@ describe("Client Endpoints - Integration Tests", () => {
 				},
 			});
 
-			// Create client for current test user (authCookies are from testUserId)
+			// Create client for current test user (accessToken is from testUserId)
 			// Note: testUserId already has 1 client from seedTestDatabase in beforeEach
 			await prisma.oAuthClient.create({
 				data: {
@@ -319,7 +317,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.get("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - Should only see own clients (1 from seed + 1 created)
@@ -356,7 +354,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.get(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - ClientResponseDTO.toJSON() returns { client: ClientObject }
@@ -372,7 +370,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.get("/client/non-existent-client-id")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(404);
 		});
 
@@ -407,7 +405,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.get(`/client/${otherClient.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(403);
 		});
 
@@ -437,7 +435,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.put(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Updated Name",
 				})
@@ -477,7 +475,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			];
 			const response = await request(app)
 				.put(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "URI Update App",
 					redirectUris: newUris,
@@ -507,7 +505,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.put(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Grants Update App",
 					grantTypes: ["authorization_code", "refresh_token"],
@@ -537,7 +535,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.put(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Public Update App",
 					isPublic: true,
@@ -552,7 +550,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.put("/client/non-existent")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Updated Name",
 				})
@@ -590,7 +588,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.put(`/client/${otherClient.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Hacked Name",
 				})
@@ -628,7 +626,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			await request(app)
 				.delete(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(204);
 
 			// Assert - Verify soft delete (isActive = false)
@@ -658,7 +656,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert - Should succeed without error
 			await request(app)
 				.delete(`/client/${client.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(204);
 		});
 
@@ -666,7 +664,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.delete("/client/non-existent-client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(404);
 		});
 
@@ -701,7 +699,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.delete(`/client/${otherClient.clientId}`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(403);
 		});
 
@@ -731,7 +729,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act
 			const response = await request(app)
 				.post(`/client/${client.clientId}/rotate-secret`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - RotateSecretResponseDTO.toJSON() returns:
@@ -767,7 +765,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.post("/client/non-existent/rotate-secret")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(404);
 		});
 
@@ -802,7 +800,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act & Assert
 			await request(app)
 				.post(`/client/${otherClient.clientId}/rotate-secret`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(403);
 		});
 
@@ -830,7 +828,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act - First rotation
 			const response1 = await request(app)
 				.post(`/client/${client.clientId}/rotate-secret`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			const secret1 = response1.body.clientSecret;
@@ -838,7 +836,7 @@ describe("Client Endpoints - Integration Tests", () => {
 			// Act - Second rotation (old secret should be replaced again)
 			const response2 = await request(app)
 				.post(`/client/${client.clientId}/rotate-secret`)
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			const secret2 = response2.body.clientSecret;

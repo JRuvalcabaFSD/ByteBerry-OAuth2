@@ -22,14 +22,19 @@ import {
 	cleanDatabase,
 	createTestUser,
 	seedScopes,
+	createSystemClient,
 	type TestUserData,
+	type TestSystemClient,
 } from "../../helpers/database-helper.js";
 import { TestServer } from "../../helpers/test-server.js";
+import { getTestAccessToken } from "../../helpers/fixtures-helper.js";
 
 describe("Account Types Flow - Integration Tests", () => {
 	let prisma: PrismaClient;
 	let testServer: TestServer;
 	let app: Application;
+	let systemClient: TestSystemClient;
+	let systemClientOwner: TestUserData;
 
 	beforeAll(async () => {
 		prisma = await getPrismaTestClient();
@@ -41,6 +46,12 @@ describe("Account Types Flow - Integration Tests", () => {
 	beforeEach(async () => {
 		await cleanDatabase(prisma);
 		await seedScopes(prisma);
+		// Create a system client owner (developer) to own the system client
+		systemClientOwner = await createTestUser(prisma, "developer", {
+			email: "system-owner@test.com",
+			username: "systemowner",
+		});
+		systemClient = await createSystemClient(prisma, systemClientOwner.id);
 	});
 
 	afterAll(async () => {
@@ -49,22 +60,10 @@ describe("Account Types Flow - Integration Tests", () => {
 	});
 
 	/**
-	 * Helper to login and get auth cookies
+	 * Helper to get access token for a user
 	 */
-	async function loginAndGetCookies(
-		email: string,
-		password: string,
-	): Promise<string[]> {
-		const loginResponse = await request(app)
-			.post("/auth/login")
-			.send({
-				emailOrUserName: email,
-				password,
-				rememberMe: false,
-			})
-			.expect(200);
-
-		return (loginResponse.headers["set-cookie"] as unknown as string[]) ?? [];
+	async function getAccessTokenForUser(userId: string): Promise<string> {
+		return getTestAccessToken(app, prisma, userId, systemClient.clientId);
 	}
 
 	describe("Registration with Account Types", () => {
@@ -167,7 +166,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 	describe("User Upgrade to Developer", () => {
 		let userAccount: TestUserData;
-		let authCookies: string[];
+		let accessToken: string;
 
 		beforeEach(async () => {
 			// Create a standard user account
@@ -175,10 +174,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				email: "upgradetest@test.com",
 				username: "upgradetest",
 			});
-			authCookies = await loginAndGetCookies(
-				userAccount.email,
-				userAccount.passwordPlain,
-			);
+			accessToken = await getAccessTokenForUser(userAccount.id);
 		});
 
 		it("should upgrade a user to developer successfully", async () => {
@@ -192,7 +188,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Act - Upgrade to developer
 			const response = await request(app)
 				.put("/user/me/upgrade/developer")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - Response
@@ -213,53 +209,24 @@ describe("Account Types Flow - Integration Tests", () => {
 
 		it("should return error when user is already a developer", async () => {
 			// Setup - First upgrade
-
 			await request(app)
 				.put("/user/me/upgrade/developer")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
+			// Act - Try to upgrade again (token is still valid)
+			const response = await request(app)
+				.put("/user/me/upgrade/developer")
+				.set("Authorization", `Bearer ${accessToken}`)
+				.expect(400);
 
-
-			// Test if original session still works
-
-			const meResponse = await request(app)
-				.get("/user/me")
-				.set("Cookie", authCookies);
-
-
-
-			// If session is still valid, use it. If not, get fresh cookies.
-			if (meResponse.status === 200) {
-				const response = await request(app)
-					.put("/user/me/upgrade/developer")
-					.set("Cookie", authCookies)
-					.expect(400);
-
-				// Assert
-				expect(response.body).toHaveProperty("error");
-				expect(response.body.message).toContain("already");
-			} else {
-
-				const freshAuthCookies = await loginAndGetCookies(
-					userAccount.email,
-					userAccount.passwordPlain,
-				);
-
-
-				const response = await request(app)
-					.put("/user/me/upgrade/developer")
-					.set("Cookie", freshAuthCookies)
-					.expect(400);
-
-				// Assert
-				expect(response.body).toHaveProperty("error");
-				expect(response.body.message).toContain("already");
-			}
+			// Assert
+			expect(response.body).toHaveProperty("error");
+			expect(response.body.message).toContain("already");
 		});
 
 		it("should require authentication for upgrade", async () => {
-			// Act - Without auth cookies
+			// Act - Without auth token
 			await request(app).put("/user/me/upgrade/developer").expect(401);
 		});
 
@@ -267,7 +234,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Upgrade to developer first
 			await request(app)
 				.put("/user/me/upgrade/developer")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Act - Create client
@@ -278,7 +245,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send(clientData)
 				.expect(201);
 
@@ -290,7 +257,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 	describe("Developer Enable Expenses", () => {
 		let developerAccount: TestUserData;
-		let authCookies: string[];
+		let accessToken: string;
 
 		beforeEach(async () => {
 			// Create a developer account (no expenses access)
@@ -298,10 +265,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				email: "devexpenses@test.com",
 				username: "devexpenses",
 			});
-			authCookies = await loginAndGetCookies(
-				developerAccount.email,
-				developerAccount.passwordPlain,
-			);
+			accessToken = await getAccessTokenForUser(developerAccount.id);
 		});
 
 		it("should enable expenses for a developer successfully", async () => {
@@ -315,7 +279,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Act - Enable expenses
 			const response = await request(app)
 				.put("/user/me/upgrade/expenses")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert - Response
@@ -338,32 +302,22 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Setup - First enable expenses
 			await request(app)
 				.put("/user/me/upgrade/expenses")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
-			// Get fresh auth cookies after enabling expenses
-			const freshAuthCookies = await loginAndGetCookies(
-				developerAccount.email,
-				developerAccount.passwordPlain,
-			);
-
-			// Act - Try to enable again
+			// Act - Try to enable again (token is still valid)
 			const response = await request(app)
 				.put("/user/me/upgrade/expenses")
-				.set("Cookie", freshAuthCookies);
-
-			// Debug - See what we actually get
-			console.log("Response status:", response.status);
-			console.log("Response body:", response.body);
+				.set("Authorization", `Bearer ${accessToken}`)
+				.expect(400);
 
 			// Assert
-			expect(response.status).toBe(400);
 			expect(response.body).toHaveProperty("error");
 			expect(response.body.message).toContain("already");
 		});
 
 		it("should require authentication for enabling expenses", async () => {
-			// Act - Without auth cookies
+			// Act - Without auth token
 			await request(app).put("/user/me/upgrade/expenses").expect(401);
 		});
 	});
@@ -371,7 +325,7 @@ describe("Account Types Flow - Integration Tests", () => {
 	describe("Client Creation Permissions", () => {
 		describe("Normal user attempts to create client", () => {
 			let userAccount: TestUserData;
-			let authCookies: string[];
+			let accessToken: string;
 
 			beforeEach(async () => {
 				// Create a standard user account (no developer access)
@@ -379,10 +333,7 @@ describe("Account Types Flow - Integration Tests", () => {
 					email: "normaluser@test.com",
 					username: "normaluser",
 				});
-				authCookies = await loginAndGetCookies(
-					userAccount.email,
-					userAccount.passwordPlain,
-				);
+				accessToken = await getAccessTokenForUser(userAccount.id);
 			});
 
 			it("should return 403 when normal user tries to create a client", async () => {
@@ -400,7 +351,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 				const response = await request(app)
 					.post("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.send(clientData)
 					.expect(403);
 
@@ -413,7 +364,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				// Act
 				const response = await request(app)
 					.get("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.expect(403);
 
 				// Assert
@@ -424,7 +375,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				// Act
 				const response = await request(app)
 					.get("/client/some-client-id")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.expect(403);
 
 				// Assert
@@ -434,7 +385,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 		describe("Developer creates client", () => {
 			let developerAccount: TestUserData;
-			let authCookies: string[];
+			let accessToken: string;
 
 			beforeEach(async () => {
 				// Create a developer account
@@ -442,10 +393,7 @@ describe("Account Types Flow - Integration Tests", () => {
 					email: "devuser@test.com",
 					username: "devuser",
 				});
-				authCookies = await loginAndGetCookies(
-					developerAccount.email,
-					developerAccount.passwordPlain,
-				);
+				accessToken = await getAccessTokenForUser(developerAccount.id);
 			});
 
 			it("should return 201 when developer creates a client", async () => {
@@ -468,7 +416,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 				const response = await request(app)
 					.post("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.send(clientData)
 					.expect(201);
 
@@ -498,7 +446,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				// Create a client first
 				await request(app)
 					.post("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.send({
 						clientName: "List Test Client",
 						redirectUris: ["https://example.com/callback"],
@@ -508,7 +456,7 @@ describe("Account Types Flow - Integration Tests", () => {
 				// Act - List clients
 				const response = await request(app)
 					.get("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.expect(200);
 
 				// Assert
@@ -527,7 +475,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 				const response = await request(app)
 					.post("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.send(clientData)
 					.expect(201);
 
@@ -538,7 +486,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 		describe("Hybrid user (developer + expenses)", () => {
 			let hybridAccount: TestUserData;
-			let authCookies: string[];
+			let accessToken: string;
 
 			beforeEach(async () => {
 				// Create a hybrid account (both developer and expenses)
@@ -546,10 +494,7 @@ describe("Account Types Flow - Integration Tests", () => {
 					email: "hybrid@test.com",
 					username: "hybrid",
 				});
-				authCookies = await loginAndGetCookies(
-					hybridAccount.email,
-					hybridAccount.passwordPlain,
-				);
+				accessToken = await getAccessTokenForUser(hybridAccount.id);
 			});
 
 			it("should allow hybrid user to create clients", async () => {
@@ -568,7 +513,7 @@ describe("Account Types Flow - Integration Tests", () => {
 
 				const response = await request(app)
 					.post("/client")
-					.set("Cookie", authCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.send(clientData)
 					.expect(201);
 
@@ -578,16 +523,10 @@ describe("Account Types Flow - Integration Tests", () => {
 			});
 
 			it("should return error when hybrid user tries to upgrade to developer again", async () => {
-				// Get fresh auth cookies for hybrid user
-				const freshAuthCookies = await loginAndGetCookies(
-					hybridAccount.email,
-					hybridAccount.passwordPlain,
-				);
-
 				// Act
 				const response = await request(app)
 					.put("/user/me/upgrade/developer")
-					.set("Cookie", freshAuthCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.expect(400);
 
 				// Assert
@@ -595,16 +534,10 @@ describe("Account Types Flow - Integration Tests", () => {
 			});
 
 			it("should return error when hybrid user tries to enable expenses again", async () => {
-				// Get fresh auth cookies for hybrid user
-				const freshAuthCookies = await loginAndGetCookies(
-					hybridAccount.email,
-					hybridAccount.passwordPlain,
-				);
-
 				// Act
 				const response = await request(app)
 					.put("/user/me/upgrade/expenses")
-					.set("Cookie", freshAuthCookies)
+					.set("Authorization", `Bearer ${accessToken}`)
 					.expect(400);
 
 				// Assert
@@ -633,16 +566,13 @@ describe("Account Types Flow - Integration Tests", () => {
 			expect(dbUser?.isDeveloper).toBe(false);
 			expect(dbUser?.canUseExpenses).toBe(true);
 
-			// Login
-			const authCookies = await loginAndGetCookies(
-				userData.email,
-				userData.password,
-			);
+			// Get access token for the user
+			const accessToken = await getAccessTokenForUser(dbUser!.id);
 
 			// Step 2: Try to create client (should fail)
 			await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Should Fail",
 					redirectUris: ["https://fail.com/callback"],
@@ -652,7 +582,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Step 3: Upgrade to developer
 			await request(app)
 				.put("/user/me/upgrade/developer")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Verify now HYBRID (developer + expenses)
@@ -665,7 +595,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Step 4: Now create client (should succeed)
 			const clientResponse = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Journey Client",
 					redirectUris: ["https://journey.com/callback"],
@@ -694,16 +624,13 @@ describe("Account Types Flow - Integration Tests", () => {
 			expect(dbUser?.isDeveloper).toBe(true);
 			expect(dbUser?.canUseExpenses).toBe(false);
 
-			// Login
-			const authCookies = await loginAndGetCookies(
-				userData.email,
-				userData.password,
-			);
+			// Get access token for the user
+			const accessToken = await getAccessTokenForUser(dbUser!.id);
 
 			// Step 2: Create client (should succeed immediately)
 			await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Dev Journey Client",
 					redirectUris: ["https://devjourney.com/callback"],
@@ -713,7 +640,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Step 3: Enable expenses
 			await request(app)
 				.put("/user/me/upgrade/expenses")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Verify now HYBRID
@@ -726,7 +653,7 @@ describe("Account Types Flow - Integration Tests", () => {
 			// Step 4: Should still be able to create clients
 			const clientResponse = await request(app)
 				.post("/client")
-				.set("Cookie", authCookies)
+				.set("Authorization", `Bearer ${accessToken}`)
 				.send({
 					clientName: "Post-Expenses Client",
 					redirectUris: ["https://post.com/callback"],

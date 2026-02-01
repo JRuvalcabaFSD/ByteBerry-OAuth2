@@ -23,6 +23,10 @@ describe('LoginController', () => {
 			version: '1.0.0',
 			serviceUrl: 'https://example.com',
 			isProduction: vi.fn().mockReturnValue(false),
+			sessionCookieName: 'session_id',
+			cookieMaxAge: 3600000,
+			cookieHttpOnly: true,
+			cookieSameSite: 'lax',
 		} as unknown as IConfig;
 
 		mockUseCase = {
@@ -86,7 +90,8 @@ describe('LoginController', () => {
 
 			await controller.getLoginForm(mockReq, mockRes, mockNext);
 
-			expect(mockLogger.debug).toHaveBeenCalledWith(
+			expect(mockLogger.debug).toHaveBeenNthCalledWith(
+				1,
 				'User already has session cookie',
 				expect.objectContaining({ sessionId: 'existing-session' })
 			);

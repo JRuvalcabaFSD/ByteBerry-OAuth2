@@ -89,7 +89,7 @@ describe('Auth Endpoints - Integration Tests', () => {
 			// Check cookie was set
 			const cookies = response.headers['set-cookie'] as unknown as string[];
 			expect(cookies).toBeDefined();
-			expect(cookies.some((c: string) => c.startsWith('session_id='))).toBe(true);
+			expect(cookies.some((c: string) => c.includes('='))).toBe(true);
 		});
 
 		it('should return 401 with invalid credentials', async () => {

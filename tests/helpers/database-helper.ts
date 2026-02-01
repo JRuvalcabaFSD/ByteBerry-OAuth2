@@ -563,3 +563,55 @@ export async function seedScopes(prisma: PrismaClient): Promise<
 		isDefault: s.isDefault,
 	}));
 }
+
+/**
+ * Datos del cliente de sistema para tests
+ */
+export interface TestSystemClient {
+	id: string;
+	clientId: string;
+	clientSecret: string;
+	clientSecretPlain: string;
+	clientName: string;
+	redirectUris: string[];
+}
+
+/**
+ * Crea un cliente de sistema para tests
+ * Este cliente se usa para generar tokens de acceso para cualquier usuario
+ */
+export async function createSystemClient(
+	prisma: PrismaClient,
+	ownerId: string,
+): Promise<TestSystemClient> {
+	const unique = Date.now() + "-" + Math.floor(Math.random() * 10000);
+	const clientSecretPlain = "system-client-secret";
+	const clientSecret = await bcrypt.hash(clientSecretPlain, 10);
+
+	const systemClient = await prisma.oAuthClient.create({
+		data: {
+			clientId: `system-test-client-${unique}`,
+			clientSecret,
+			clientName: "System Test Client",
+			redirectUris: [
+				"http://localhost:5173/callback",
+				"https://example.com/callback",
+			],
+			grantTypes: ["authorization_code", "refresh_token"],
+			isPublic: false,
+			isActive: true,
+			userId: ownerId,
+			isSystemClient: true,
+			systemRole: "test",
+		},
+	});
+
+	return {
+		id: systemClient.id,
+		clientId: systemClient.clientId,
+		clientSecret,
+		clientSecretPlain,
+		clientName: systemClient.clientName,
+		redirectUris: systemClient.redirectUris,
+	};
+}

@@ -5,6 +5,7 @@ import type { Application } from 'express';
 import { getPrismaTestClient, closePrismaTestClient } from '../../helpers/prisma-test-client.js';
 import { cleanDatabase, seedTestDatabase } from '../../helpers/database-helper.js';
 import { TestServer } from '../../helpers/test-server.js';
+import { getTestAccessToken } from '../../helpers/fixtures-helper.js';
 
 describe('Consent Management Flow - Integration Tests', () => {
 	let prisma: PrismaClient;
@@ -14,6 +15,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 	let testUserPassword: string;
 	let testUserId: string;
 	let testClientId: string;
+	let accessToken: string;
 	let authCookies: string[];
 
 	beforeAll(async () => {
@@ -31,7 +33,10 @@ describe('Consent Management Flow - Integration Tests', () => {
 		testUserId = seed.testUser.id;
 		testClientId = seed.testClient.clientId;
 
-		// Login
+		// Get access token via OAuth2 flow for user endpoints
+		accessToken = await getTestAccessToken(app, prisma, testUserId, testClientId);
+
+		// Login to get cookies for consent decision endpoint (which still uses session)
 		const loginResponse = await request(app)
 			.post('/auth/login')
 			.send({
@@ -56,7 +61,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 
 	describe('Complete Consent Lifecycle', () => {
 		it('should grant → list → revoke consent successfully', async () => {
-			// ========== STEP 1: Grant Consent ==========
+			// ========== STEP 1: Grant Consent (uses session cookies for auth flow) ==========
 			const consentData = {
 				decision: 'approve',
 				client_id: testClientId,
@@ -74,10 +79,10 @@ describe('Consent Management Flow - Integration Tests', () => {
 				.send(consentData)
 				.expect(302);
 
-			// ========== STEP 2: List Consents ==========
+			// ========== STEP 2: List Consents (uses Bearer token) ==========
 			const listResponse = await request(app)
 				.get('/user/me/consents')
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Assert consent exists
@@ -95,10 +100,10 @@ describe('Consent Management Flow - Integration Tests', () => {
 
 			const consentId = consent.id;
 
-			// ========== STEP 3: Revoke Consent ==========
+			// ========== STEP 3: Revoke Consent (uses Bearer token) ==========
 			await request(app)
 				.delete(`/user/me/consents/${consentId}`)
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(204);
 
 			// ========== STEP 4: Verify Consent is Revoked ==========
@@ -112,7 +117,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 			// ========== STEP 5: List Consents Again (should be empty) ==========
 			const listAfterRevoke = await request(app)
 				.get('/user/me/consents')
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(200);
 
 			// Note: Depending on implementation, might filter out revoked consents
@@ -160,7 +165,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 			// ========== STEP 3: List all consents ==========
 			const listResponse = await request(app)
 				.get('/user/me/consents')
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(200);
 
 			expect(listResponse.body.consents).toHaveLength(2);
@@ -178,13 +183,13 @@ describe('Consent Management Flow - Integration Tests', () => {
 			// ========== STEP 4: Revoke only one consent ==========
 			await request(app)
 				.delete(`/user/me/consents/${consent1.id}`)
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(204);
 
 			// ========== STEP 5: Verify only one remains ==========
 			const afterRevoke = await request(app)
 				.get('/user/me/consents')
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(200);
 
 			expect(afterRevoke.body.consents).toHaveLength(1);
@@ -206,7 +211,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 			// ========== STEP 2: Try to revoke again ==========
 			await request(app)
 				.delete(`/user/me/consents/${consent.id}`)
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(204); // Should succeed (idempotent)
 		});
 
@@ -236,7 +241,7 @@ describe('Consent Management Flow - Integration Tests', () => {
 			// ========== STEP 2: Try to revoke other user's consent ==========
 			await request(app)
 				.delete(`/user/me/consents/${otherConsent.id}`)
-				.set('Cookie', authCookies)
+				.set('Authorization', `Bearer ${accessToken}`)
 				.expect(403); // Forbidden
 		});
 	});
