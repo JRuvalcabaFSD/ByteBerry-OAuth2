@@ -8,7 +8,7 @@ declare global {
 			startTime?: number;
 			user?: {
 				userId: string;
-				sessionId: string;
+				sessionId?: string;
 			};
 		}
 	}

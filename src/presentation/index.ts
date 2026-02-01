@@ -8,6 +8,7 @@ export * from './controller/client.controller.js';
 export * from './middleware/session.handlers.js';
 export * from './middleware/session.middleware.js';
 export * from './middleware/developer.middleware.js';
+export * from './middleware/token.middleware.js';
 
 //Routes
 export * from './routes/app.router.js';

@@ -4,7 +4,17 @@ import * as Controllers from '@presentation';
 import * as Routes from '@presentation';
 
 import { Injectable } from '@shared';
-import type { HomeResponse, IClock, IConfig, IHealthService, ILogger, ISessionRepository, IUserRepository } from '@interfaces';
+import type {
+	HomeResponse,
+	IClock,
+	IConfig,
+	IHealthService,
+	IJwtPayload,
+	IJwtService,
+	ILogger,
+	ISessionRepository,
+	IUserRepository,
+} from '@interfaces';
 import {
 	createSessionMiddleware,
 	createDeveloperMiddleware,
@@ -13,6 +23,7 @@ import {
 	UnAuthorizedErrorHandle,
 } from '@presentation';
 import { createClientRoutes } from './client.routes.js';
+import { createTokenMiddleware } from '../middleware/token.middleware.js';
 
 /**
  * Augments the ServiceMap interface to include the AppRouter service.
@@ -37,6 +48,7 @@ declare module '@ServiceMap' {
 		'UserRepository',
 		'Logger',
 		'HealthService',
+		'JwtService',
 		'LoginController',
 		'authController',
 		'tokenController',
@@ -55,6 +67,7 @@ export class AppRouter {
 		private readonly userRepository: IUserRepository,
 		private readonly logger: ILogger,
 		private readonly heathService: IHealthService,
+		private readonly jwtService: IJwtService,
 		private readonly loginCtl: Controllers.LoginController,
 		private readonly authCtl: Controllers.AuthController,
 		private readonly tokenCtl: Controllers.TokenController,
@@ -88,12 +101,7 @@ export class AppRouter {
 	private setupRoutes(): void {
 		const baseurl = `${this.config.serviceUrl}:${this.config.port}`;
 
-		const requireSession = createSessionMiddleware(
-			this.sessionRepository,
-			this.logger,
-			{ onError: new UnAuthorizedErrorHandle() },
-			this.config.sessionCookieName
-		);
+		const requireToken = createTokenMiddleware(this.config, this.jwtService, this.logger);
 		const requireSessionRedirect = createSessionMiddleware(
 			this.sessionRepository,
 			this.logger,
@@ -105,10 +113,10 @@ export class AppRouter {
 		const requireDeveloper = createDeveloperMiddleware(this.userRepository, this.logger);
 
 		// Client
-		this.router.use('/client', requireSession, requireDeveloper, createClientRoutes(this.clientCtl));
+		this.router.use('/client', requireToken, requireDeveloper, createClientRoutes(this.clientCtl));
 
 		// User
-		this.router.use('/user', createUserRoutes(this.userCtl, requireSession));
+		this.router.use('/user', createUserRoutes(this.userCtl, requireToken));
 
 		//Auth
 		this.router.use('/auth', Routes.createAuthRoutes(this.loginCtl, this.authCtl, this.tokenCtl, this.jwksCtl, requireSessionRedirect));

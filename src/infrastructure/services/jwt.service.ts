@@ -42,6 +42,7 @@ export class JwtService implements IJwtService {
 	private readonly audience: string[];
 	private readonly accessTokenExpiration: number;
 	private readonly keyId: string;
+	private readonly serviceName: string;
 	private readonly algorithm = 'RS256';
 
 	constructor(
@@ -55,6 +56,7 @@ export class JwtService implements IJwtService {
 		this.audience = config.jwtAudience;
 		this.keyId = config.jwtKeyId;
 		this.accessTokenExpiration = config.jwtAccessTokenExpiresIn;
+		this.serviceName = config.serviceName;
 	}
 	/**
 	 * Generates a JWT access token with the provided payload.
@@ -77,6 +79,7 @@ export class JwtService implements IJwtService {
 	 */
 
 	public generateAccessToken(payload: Omit<IJwtPayload, 'iat' | 'exp' | 'iss' | 'aud'>): string {
+		const aud = [this.serviceName, ...this.audience];
 		try {
 			const now = Math.floor(Date.now() / 1000);
 
@@ -84,7 +87,7 @@ export class JwtService implements IJwtService {
 			const completePayload: JwtPayload = {
 				...payload,
 				iss: this.issuer,
-				aud: this.audience,
+				aud,
 				iat: now,
 				exp: now + this.accessTokenExpiration,
 			};
