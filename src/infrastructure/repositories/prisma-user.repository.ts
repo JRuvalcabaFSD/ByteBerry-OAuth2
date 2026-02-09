@@ -42,6 +42,7 @@ export class UserRepository implements IUserRepository {
 	@LogContextMethod()
 	public async findByEmail(email: string): Promise<UserEntity | null> {
 		try {
+			if (!email) return null;
 			const user = await this.client.user.findUnique({ where: { email } });
 
 			if (!user) return null;
@@ -64,6 +65,8 @@ export class UserRepository implements IUserRepository {
 	@LogContextMethod()
 	public async findByUserName(username: string): Promise<UserEntity | null> {
 		try {
+			if (!username) return null;
+
 			const user = await this.client.user.findUnique({ where: { username } });
 
 			if (!user) return null;
@@ -86,6 +89,7 @@ export class UserRepository implements IUserRepository {
 	@LogContextMethod()
 	public async findById(id: string): Promise<UserEntity | null> {
 		try {
+			if (!id) return null;
 			const user = await this.client.user.findUnique({ where: { id } });
 
 			if (!user) return null;
